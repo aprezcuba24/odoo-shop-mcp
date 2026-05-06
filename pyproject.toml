@@ -1,0 +1,27 @@
+[project]
+name = "apk-mcp"
+version = "0.1.0"
+description = "MCP server bridging ChatGPT/Cursor to Tienda Apk order_bridge REST API"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastmcp>=2.3.0",
+    "httpx[http2]>=0.27.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.2.0",
+    "python-dotenv>=1.0.0",
+    "aiosqlite>=0.20.0",
+]
+
+[project.scripts]
+apk-mcp = "apk_mcp.__main__:main"
+
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.uv]
+dev-dependencies = []
