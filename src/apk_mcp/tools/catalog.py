@@ -6,10 +6,9 @@ from typing import Any
 
 from uncalled_for import Depends
 
-from apk_mcp.app_state import get_apk_api
 from apk_mcp.http_client import ApkApiClient
 from apk_mcp.models.catalog import ListProductsParams, ProductsPageResponse
-from apk_mcp.server import mcp
+from apk_mcp.server import get_apk_api, mcp
 
 
 @mcp.tool(
