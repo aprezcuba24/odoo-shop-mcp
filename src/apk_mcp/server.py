@@ -10,7 +10,6 @@ from apk_mcp.app_state import app_state
 from apk_mcp.config import get_settings
 from apk_mcp.http_client import ApkApiClient
 from apk_mcp.session_store import create_device_key_store
-from apk_mcp.tools.catalog import register_catalog_tools
 
 
 @lifespan
@@ -23,7 +22,6 @@ async def app_lifespan(server: FastMCP):
         timeout=settings.apk_api_timeout,
     ) as http:
         app_state.api = ApkApiClient(http, store)
-        register_catalog_tools(server)
         try:
             yield {"settings": settings, "store": store}
         finally:
@@ -42,6 +40,8 @@ mcp = FastMCP(
     ),
     lifespan=app_lifespan,
 )
+
+import apk_mcp.tools
 
 
 def run() -> None:
