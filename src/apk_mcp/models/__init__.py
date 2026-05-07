@@ -1,15 +1,27 @@
 """Pydantic models mirroring OpenAPI schemas (incremental)."""
 
-from apk_mcp.models.catalog import (
-    ListProductsParams,
-    ProductCategoryRow,
-    ProductListRow,
-    ProductsPageResponse,
+from apk_mcp.models.common import (
+    ConfigurationErrorResponse,
+    InsufficientStockErrorResponse,
+    InsufficientStockProductItem,
+    MessageErrorResponse,
+    PaginationMeta,
+    PaginationParams,
+    SimpleErrorResponse,
+    UnauthorizedErrorResponse,
+    ValidationDetailItem,
+    ValidationErrorResponse,
 )
 
 __all__ = [
-    "ListProductsParams",
-    "ProductCategoryRow",
-    "ProductListRow",
-    "ProductsPageResponse",
+    "ConfigurationErrorResponse",
+    "InsufficientStockErrorResponse",
+    "InsufficientStockProductItem",
+    "MessageErrorResponse",
+    "PaginationMeta",
+    "PaginationParams",
+    "SimpleErrorResponse",
+    "UnauthorizedErrorResponse",
+    "ValidationDetailItem",
+    "ValidationErrorResponse",
 ]

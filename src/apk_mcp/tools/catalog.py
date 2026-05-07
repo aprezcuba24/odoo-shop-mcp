@@ -6,9 +6,8 @@ from typing import Any
 
 from uncalled_for import Depends
 
-from apk_mcp.utils import ApkApiClient
-from apk_mcp.models.catalog import ListProductsParams, ProductsPageResponse
-from apk_mcp.server import get_apk_api, mcp
+from apk_mcp.server import OrderBridgeClientRef, get_apk_api, mcp
+from apk_mcp.services.order_bridge.products import list_products_page
 
 
 @mcp.tool(
@@ -20,11 +19,16 @@ from apk_mcp.server import get_apk_api, mcp
     ),
 )
 async def list_products(
-    api: ApkApiClient = Depends(get_apk_api),
-    params: ListProductsParams | None = None,
+    api: OrderBridgeClientRef = Depends(get_apk_api),
+    limit: int | None = None,
+    offset: int | None = None,
+    category_id: int | None = None,
+    search: str | None = None,
 ) -> dict[str, Any]:
-    p = params or ListProductsParams()
-    query = p.model_dump(mode="json", exclude_none=True)
-    raw = await api.get_json("/api/order_bridge/products", params=query or None)
-    page = ProductsPageResponse.model_validate(raw)
-    return page.model_dump(mode="json")
+    return await list_products_page(
+        api.client,
+        limit=limit,
+        offset=offset,
+        category_id=category_id,
+        search=search,
+    )
