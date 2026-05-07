@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     )
     apk_api_timeout: float = Field(default=30.0, ge=1.0)
     mcp_host: str = Field(default="0.0.0.0")
-    mcp_port: int = Field(default=8000, ge=1, le=65535)
+    mcp_port: int = Field(default=9000, ge=1, le=65535)
     mcp_path: str = Field(default="/mcp")
 
     device_key_store_mode: DeviceKeyStoreMode = Field(

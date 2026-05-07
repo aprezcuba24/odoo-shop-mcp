@@ -1,0 +1,17 @@
+{
+  "name": "apk-mcp",
+  "private": true,
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22.7.5"
+  },
+  "scripts": {
+    "mcp:server": "sh -c 'if command -v uv >/dev/null 2>&1; then exec uv run apk-mcp; elif [ -x .venv/bin/python ]; then exec .venv/bin/python -m apk_mcp; else exec python3 -m apk_mcp; fi'",
+    "inspector": "mcp-inspector",
+    "dev": "concurrently -n mcp,inspector -c blue,magenta \"pnpm run mcp:server\" \"pnpm run inspector\""
+  },
+  "devDependencies": {
+    "@modelcontextprotocol/inspector": "^0.17.2",
+    "concurrently": "^9.1.2"
+  }
+}

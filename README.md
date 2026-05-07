@@ -5,6 +5,8 @@ Servidor [MCP](https://modelcontextprotocol.io/) (Model Context Protocol) en Pyt
 ## Requisitos
 
 - Python 3.11+
+- Para las herramientas de desarrollo Node ([MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector)): Node.js **22.7.5+** y **pnpm** (ver [Desarrollo / MCP Inspector](#desarrollo--mcp-inspector)).
+
 
 ## Instalación
 
@@ -63,6 +65,18 @@ apk-mcp
 Por defecto el endpoint MCP queda en `http://<MCP_HOST>:<MCP_PORT>/mcp` (FastMCP 3.x, transporte `streamable-http`).
 
 Variables de entorno adicionales de FastMCP (opcionales) están documentadas en [gofastmcp.com](https://gofastmcp.com); este proyecto pasa `host`, `port` y `path` desde `MCP_HOST`, `MCP_PORT` y la ruta configurada en código (`/mcp` por defecto vía `Settings.mcp_path`).
+
+## Desarrollo / MCP Inspector
+
+[Herramienta oficial](https://modelcontextprotocol.io/docs/tools/inspector) para probar y depurar servidores MCP (solo desarrollo local; no forma parte del despliegue en producción).
+
+1. Instala dependencias Node en la raíz del repo: `pnpm install`.
+2. Arranca el servidor FastMCP y el Inspector en **un solo terminal**: `pnpm dev` (usa [concurrently](https://www.npmjs.com/package/concurrently) para lanzar `uv run apk-mcp` y el inspector en paralelo).
+3. Abre la UI del Inspector (por defecto `http://localhost:6274`). En la consola aparece un **token de sesión** del proxy: úsalo si la UI lo pide (no desactivar la autenticación salvo que entiendas los riesgos descritos en el proyecto [inspector](https://github.com/modelcontextprotocol/inspector)).
+4. Conecta con transporte **Streamable HTTP** a la URL del servidor MCP, p. ej. `http://localhost:8000/mcp` (ajusta puerto y ruta si cambiaste `MCP_PORT` o `MCP_PATH`). Atajo con query params: `http://localhost:6274/?transport=streamable-http&serverUrl=http://localhost:8000/mcp`.
+5. Opcional: `pnpm run inspector -- --config dev/mcp-inspector.config.json --server apk-mcp-local` para cargar la entrada `streamable-http` hacia `http://127.0.0.1:8000/mcp` (actualiza el JSON si el bind no es el predeterminado).
+
+También puedes ejecutar por separado `pnpm run mcp:server` y `pnpm run inspector` en dos terminales.
 
 ## Uso con ChatGPT / Cursor
 
