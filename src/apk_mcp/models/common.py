@@ -69,3 +69,21 @@ class InsufficientStockErrorResponse(BaseModel):
     error: str = Field(default="insufficient_stock")
     message: str
     products: list[InsufficientStockProductItem]
+
+
+class PaginationParams(BaseModel):
+    """Optional limit/offset for list endpoints (query)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    limit: int | None = Field(
+        default=None,
+        ge=1,
+        le=200,
+        description="Page size (API default 80, max 200).",
+    )
+    offset: int | None = Field(
+        default=None,
+        ge=0,
+        description="Offset for pagination (API default 0).",
+    )

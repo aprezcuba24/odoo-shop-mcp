@@ -4,6 +4,22 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from apk_mcp.models.common import PaginationParams
+
+
+class ListProductsParams(PaginationParams):
+    """Query parameters for GET /api/order_bridge/products."""
+
+    category_id: int | None = Field(
+        default=None,
+        gt=0,
+        description="Filter by product.category id.",
+    )
+    search: str | None = Field(
+        default=None,
+        description="Partial product name search (case-insensitive).",
+    )
+
 
 class ProductCategoryRow(BaseModel):
     model_config = ConfigDict(extra="forbid")
