@@ -7,14 +7,14 @@ from typing import Any
 import httpx
 from fastmcp.server.context import Context
 
-from apk_mcp.exceptions import (
+from .exceptions import (
     ApkApiError,
     MissingDeviceKeyError,
     NotFoundError,
     UnauthorizedError,
     ValidationApiError,
 )
-from apk_mcp.session_store import DeviceKeyStore
+from .session_store import DeviceKeyStore
 
 
 class ApkApiClient:

@@ -10,7 +10,7 @@ class DeviceKeyRepository(Protocol):
     """Async key-value store: ``persistence_key`` → API ``device_key`` string.
 
     Implementations may use SQLite, Postgres, Redis, etc. Callers compute
-    ``persistence_key`` via :func:`apk_mcp.session_store.resolve_persistence_key`.
+    ``persistence_key`` via :func:`apk_mcp.utils.session_store.resolve_persistence_key`.
     """
 
     async def get(self, persistence_key: str) -> str | None:

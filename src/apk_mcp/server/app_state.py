@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from apk_mcp.http_client import ApkApiClient
+from apk_mcp.utils import ApkApiClient
 
 
 class AppState:

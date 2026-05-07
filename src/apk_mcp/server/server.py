@@ -7,9 +7,8 @@ from fastmcp import FastMCP
 from fastmcp.server.lifespan import lifespan
 
 from apk_mcp.config import get_settings
-from apk_mcp.http_client import ApkApiClient
+from apk_mcp.utils import ApkApiClient, create_device_key_store
 from .app_state import app_state
-from apk_mcp.session_store import create_device_key_store
 
 
 @lifespan
