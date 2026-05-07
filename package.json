@@ -7,6 +7,7 @@
   },
   "scripts": {
     "mcp:server": "sh -c 'if command -v uv >/dev/null 2>&1; then exec uv run apk-mcp; elif [ -x .venv/bin/python ]; then exec .venv/bin/python -m apk_mcp; else exec python3 -m apk_mcp; fi'",
+    "gen:order-bridge-types": "bash scripts/gen-order-bridge-api.sh",
     "inspector": "mcp-inspector",
     "dev": "concurrently -n mcp,inspector -c blue,magenta \"pnpm run mcp:server\" \"pnpm run inspector\""
   },
