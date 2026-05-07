@@ -6,8 +6,10 @@ from typing import Annotated, Any
 
 from fastmcp import FastMCP
 from pydantic import Field
+from uncalled_for import Depends
 
-from apk_mcp.app_state import app_state
+from apk_mcp.app_state import get_apk_api
+from apk_mcp.http_client import ApkApiClient
 from apk_mcp.models.catalog import ProductsPageResponse
 
 _registered_servers: set[int] = set()
@@ -26,6 +28,7 @@ def register_catalog_tools(mcp: FastMCP) -> None:
         ),
     )
     async def list_products(
+        api: ApkApiClient = Depends(get_apk_api),
         limit: Annotated[
             int | None,
             Field(
@@ -59,10 +62,6 @@ def register_catalog_tools(mcp: FastMCP) -> None:
             ),
         ] = None,
     ) -> dict[str, Any]:
-        api = app_state.api
-        if api is None:
-            raise RuntimeError("API client not initialized; server lifespan did not start.")
-
         params: dict[str, Any] = {}
         if limit is not None:
             params["limit"] = limit

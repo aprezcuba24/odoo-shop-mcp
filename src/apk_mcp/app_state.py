@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from apk_mcp.http_client import ApkApiClient
+from apk_mcp.http_client import ApkApiClient
 
 
 class AppState:
@@ -16,3 +13,10 @@ class AppState:
 
 
 app_state = AppState()
+
+
+def get_apk_api() -> ApkApiClient:
+    api = app_state.api
+    if api is None:
+        raise RuntimeError("API client not initialized; server lifespan did not start.")
+    return api
