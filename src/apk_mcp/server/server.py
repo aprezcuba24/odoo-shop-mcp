@@ -42,6 +42,7 @@ mcp = FastMCP(
     instructions=(
         "Bridge to Tienda Apk order_bridge REST API under /api/order_bridge/. "
         "Use list_products for the public product catalog. "
+        "Use list_orders for the authenticated orders list (requires stored device_key). "
         "Authenticated routes require a device_key (Bearer); store modes: context, sqlite, layered."
     ),
     lifespan=app_lifespan,

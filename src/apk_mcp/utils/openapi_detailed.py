@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
+from contextlib import asynccontextmanager
 from http import HTTPStatus
 from typing import Any
 
@@ -28,6 +29,28 @@ DEFAULT_BAD_REQUEST_SPEC: tuple[tuple[type[Any], type[ApkApiError]], ...] = (
     (ValidationErrorResponse, ValidationApiError),
     (MessageErrorResponse, MessageApiError),
 )
+
+
+@asynccontextmanager
+async def bearer_authorization(client: Client, token: str):
+    """Set ``Authorization: Bearer`` on the shared async client, then restore.
+
+    The Tienda Apk client is one process-wide ``httpx.AsyncClient``; concurrent
+    calls with different tokens can still race. Typical MCP traffic is sequential.
+    """
+    http = client.get_async_httpx_client()
+    prior = http.headers.get("Authorization")
+    http.headers["Authorization"] = f"Bearer {token}"
+    try:
+        yield
+    finally:
+        if prior is None:
+            try:
+                del http.headers["Authorization"]
+            except KeyError:
+                pass
+        else:
+            http.headers["Authorization"] = prior
 
 
 def message_from_error_body(body: dict[str, Any] | None, fallback: str) -> str:
@@ -117,6 +140,7 @@ async def client_helper(
         content=resp.content,
         fallback_text=resp.content.decode(errors="replace"),
     )
+
 
 def unset_int(value: int | None) -> int | Unset:
     return UNSET if value is None else value

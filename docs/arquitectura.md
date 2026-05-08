@@ -20,7 +20,7 @@ Servidor **MCP** (FastMCP, transporte **Streamable HTTP**) que expone *tools* al
 1. El cliente abre sesión MCP sobre HTTP (`/mcp`).
 2. El lifespan crea `httpx.AsyncClient` con `APK_API_BASE_URL` y el `DeviceKeyStore` configurado.
 3. Un tool (p. ej. `list_products`) usa `app_state.api` → `GET /api/order_bridge/products`.
-4. Rutas que exijan Bearer leerán el `device_key` del store (memoria + disco según modo).
+4. Rutas que exijan Bearer leen el `device_key` del store (memoria + disco según modo); los tools autenticados usan `Depends(get_authenticated_order_bridge)` en lugar de repetir esa lógica.
 
 ## Persistencia del `device_key`
 

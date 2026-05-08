@@ -2,9 +2,21 @@
 
 from __future__ import annotations
 
-from .app_state import OrderBridgeClientRef, get_apk_api
+from .app_state import (
+    AuthenticatedOrderBridgeRef,
+    OrderBridgeClientRef,
+    get_apk_api,
+    get_authenticated_order_bridge,
+)
 from .server import mcp, run
 
 import apk_mcp.tools  # noqa: F401  # register tools
 
-__all__ = ["OrderBridgeClientRef", "get_apk_api", "mcp", "run"]
+__all__ = [
+    "AuthenticatedOrderBridgeRef",
+    "OrderBridgeClientRef",
+    "get_apk_api",
+    "get_authenticated_order_bridge",
+    "mcp",
+    "run",
+]
