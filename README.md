@@ -32,27 +32,14 @@ Copia `.env.example` a `.env` y ajusta:
 | `APK_API_BASE_URL` | URL base del host (ej. `https://mi-odoo.com`) |
 | `APK_API_TIMEOUT` | Timeout HTTP en segundos |
 | `MCP_HOST` / `MCP_PORT` / `MCP_PATH` | Bind y ruta del endpoint MCP (p. ej. `/mcp`) |
-| `APK_DEVICE_KEY_STORE_MODE` | `layered` (recomendado), `context`, o `sqlite` |
-| `APK_DEVICE_KEY_PERSISTENCE_BACKEND` | Motor del repositorio: `sqlite` (por defecto) o `memory` (pruebas) |
-| `APK_DEVICE_KEY_DB_PATH` | Ruta al SQLite cuando el backend es `sqlite` |
 
-### Autenticación (`device_key`)
+### Autenticación (Bearer)
 
-La API usa `Authorization: Bearer <device_key>` salvo rutas públicas (catálogo, `POST /register`, etc.).
+La API usa `Authorization: Bearer <token>` salvo rutas públicas (catálogo, `POST /register`, etc.).
 
-- **Capa de sesión (caché)**: FastMCP guarda estado por sesión MCP (`Context.set_state` / `get_state`).
-- **Repositorio genérico**: la persistencia estable va detrás de la interfaz `DeviceKeyRepository` ([`src/apk_mcp/persistence/base.py`](src/apk_mcp/persistence/base.py)). Hoy hay implementaciones **SQLite** y **memoria**; puedes añadir Postgres/Redis implementando el mismo protocolo y registrándolo en [`create_device_key_repository`](src/apk_mcp/persistence/factory.py).
+Este servidor genera **una sola vez por ejecución** un token opaco en memoria ([`InMemoryBearerTokenStore`](src/apk_mcp/utils/bearer_token_store.py)) y lo reutiliza para todas las llamadas autenticadas hasta que reinicies el proceso MCP. **No se guarda en disco**; tras un reinicio el token es distinto.
 
-La clave lógica en disco es `resolve_persistence_key` ([`session_store.py`](src/apk_mcp/session_store.py)), en este orden:
-
-1. **OAuth** (conector con login, p. ej. ChatGPT): token de acceso con claim `sub` → clave `oauth:{client_id}|{sub}` (misma idea que el aislamiento de tareas en FastMCP). Así **un nuevo chat del mismo usuario** suele reutilizar el mismo bucket y el `device_key` ya registrado.
-2. **`Context.client_id`** del runtime MCP (depende del cliente; puede cambiar entre conversaciones).
-3. Cabecera **`X-Client-Id`** (útil si delante del MCP fijas un id estable por usuario).
-4. **`default`**: un solo bucket para toda la instancia (single-tenant). También sobrevive a nuevos chats si solo hay un operador.
-
-Modo recomendado: **`APK_DEVICE_KEY_STORE_MODE=layered`**: lectura rápida desde la sesión y escritura/lectura en el repositorio para reconexiones y nuevos chats.
-
-**Expectativas realistas:** si el proveedor MCP no envía OAuth con `sub` estable y tampoco `X-Client-Id`, solo tendrás continuidad fuerte con el bucket `default` (un usuario) o con lo que exponga `Context.client_id`. Para ChatGPT como app con OAuth, configura el servidor MCP con el flujo de auth de FastMCP para maximizar la clave `oauth:…`.
+Si Tienda Apk exige que el dispositivo esté registrado en Odoo, un **401** puede indicar que ese token aún no está vinculado en la API, no un fallo local de “falta token”.
 
 ## Ejecución
 

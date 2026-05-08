@@ -6,8 +6,6 @@ __pycache__/
 dist/
 build/
 .env
-data/*.sqlite
-data/*.sqlite-journal
 .uv/
 uv.lock
 node_modules/

@@ -4,10 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from fastmcp.server.context import Context
-
 from apk_mcp.generated.order_bridge_client import Client
-from apk_mcp.utils.exceptions import MissingDeviceKeyError
+from apk_mcp.utils.bearer_token_store import BearerTokenStore
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,17 +23,18 @@ class OrderBridgeClientRef:
 
 @dataclass(frozen=True, slots=True)
 class AuthenticatedOrderBridgeRef:
-    """Same lifespan ``Client`` plus ``device_key`` for Bearer (see ``bearer_authorization``)."""
+    """Same lifespan ``Client`` plus Bearer token (see ``bearer_authorization``)."""
 
     client: Client
     bearer_token: str
 
 
 class AppState:
-    __slots__ = ("api",)
+    __slots__ = ("api", "bearer_token_store")
 
     def __init__(self) -> None:
         self.api: Client | None = None
+        self.bearer_token_store: BearerTokenStore | None = None
 
 
 app_state = AppState()
@@ -48,16 +47,12 @@ def get_apk_api() -> OrderBridgeClientRef:
     return OrderBridgeClientRef(api)
 
 
-async def get_authenticated_order_bridge(ctx: Context) -> AuthenticatedOrderBridgeRef:
+async def get_authenticated_order_bridge() -> AuthenticatedOrderBridgeRef:
     api = app_state.api
     if api is None:
         raise RuntimeError("API client not initialized; server lifespan did not start.")
-    store = ctx.lifespan_context.get("store")
-    if store is None:
-        raise RuntimeError("Device key store not initialized; server lifespan did not start.")
-    device_key = await store.get(ctx)
-    if not device_key:
-        raise MissingDeviceKeyError(
-            "No device_key in session or store. Call register_device (or set device key) first."
-        )
-    return AuthenticatedOrderBridgeRef(client=api, bearer_token=device_key)
+    token_store = app_state.bearer_token_store
+    if token_store is None:
+        raise RuntimeError("Bearer token store not initialized; server lifespan did not start.")
+    bearer_token = await token_store.ensure_token()
+    return AuthenticatedOrderBridgeRef(client=api, bearer_token=bearer_token)

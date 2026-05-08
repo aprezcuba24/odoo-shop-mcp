@@ -7,24 +7,23 @@ from typing import Any
 import httpx
 from fastmcp.server.context import Context
 
+from .bearer_token_store import BearerTokenStore
 from .exceptions import (
     ApkApiError,
-    MissingDeviceKeyError,
     NotFoundError,
     UnauthorizedError,
     ValidationApiError,
 )
-from .session_store import DeviceKeyStore
 
 
 class ApkApiClient:
     def __init__(
         self,
         client: httpx.AsyncClient,
-        store: DeviceKeyStore,
+        token_store: BearerTokenStore,
     ) -> None:
         self._client = client
-        self._store = store
+        self._token_store = token_store
 
     def _json_or_raise(self, response: httpx.Response) -> Any:
         if response.is_success:
@@ -104,11 +103,7 @@ class ApkApiClient:
         json_body: Any = None,
         extra_headers: dict[str, str] | None = None,
     ) -> Any:
-        token = await self._store.get(ctx)
-        if not token:
-            raise MissingDeviceKeyError(
-                "No device_key in session or store. Call register_device (or set device key) first."
-            )
+        token = await self._token_store.ensure_token()
         headers = dict(extra_headers or {})
         headers["Authorization"] = f"Bearer {token}"
         return await self.request_json(

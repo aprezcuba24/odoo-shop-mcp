@@ -1,4 +1,4 @@
-"""Typed errors for REST bridge and device key store."""
+"""Typed errors for REST bridge."""
 
 from __future__ import annotations
 
@@ -38,7 +38,3 @@ class NotFoundError(ApkApiError):
 
 class MessageApiError(ApkApiError):
     """400 with structured error + message."""
-
-
-class MissingDeviceKeyError(ApkMcpError):
-    """No device_key in session / store for an authenticated endpoint."""

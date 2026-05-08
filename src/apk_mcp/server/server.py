@@ -8,14 +8,14 @@ from fastmcp.server.lifespan import lifespan
 
 from apk_mcp.config import get_settings
 from apk_mcp.generated.order_bridge_client import Client
-from apk_mcp.utils import create_device_key_store
+from apk_mcp.utils import create_bearer_token_store
 from .app_state import app_state
 
 
 @lifespan
 async def app_lifespan(server: FastMCP):
     settings = get_settings()
-    store = create_device_key_store(settings)
+    bearer_token_store = create_bearer_token_store()
     base = settings.apk_api_base_url.rstrip("/")
     async with httpx.AsyncClient(
         base_url=base,
@@ -28,13 +28,12 @@ async def app_lifespan(server: FastMCP):
         )
         ob_client.set_async_httpx_client(http)
         app_state.api = ob_client
+        app_state.bearer_token_store = bearer_token_store
         try:
-            yield {"settings": settings, "store": store}
+            yield {"settings": settings, "bearer_token_store": bearer_token_store}
         finally:
             app_state.api = None
-            backend = getattr(store, "repository", None)
-            if backend is not None:
-                await backend.aclose()
+            app_state.bearer_token_store = None
 
 
 mcp = FastMCP(
@@ -42,8 +41,8 @@ mcp = FastMCP(
     instructions=(
         "Bridge to Tienda Apk order_bridge REST API under /api/order_bridge/. "
         "Use list_products for the public product catalog. "
-        "Use list_orders for the authenticated orders list (requires stored device_key). "
-        "Authenticated routes require a device_key (Bearer); store modes: context, sqlite, layered."
+        "Use list_orders for the authenticated orders list (Bearer token auto-created in memory for this server process). "
+        "Authenticated routes use that same in-process Bearer token."
     ),
     lifespan=app_lifespan,
 )

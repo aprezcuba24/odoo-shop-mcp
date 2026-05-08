@@ -18,8 +18,8 @@ from apk_mcp.services.order_bridge.orders import list_orders_page
     name="list_orders",
     description=(
         "List orders for the device contact via GET /api/order_bridge/orders. "
-        "Requires a stored device_key (Bearer). Supports pagination (limit, offset) "
-        "and optional state filter."
+        "Uses the in-process Bearer token (auto-created on first use for this server run). "
+        "Supports pagination (limit, offset) and optional state filter."
     ),
 )
 async def list_orders(
