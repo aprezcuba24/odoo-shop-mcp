@@ -39,10 +39,30 @@ async def app_lifespan(server: FastMCP):
 mcp = FastMCP(
     name="apk-mcp",
     instructions=(
-        "Bridge to Tienda Apk order_bridge REST API under /api/order_bridge/. "
-        "Use list_products for the public product catalog. "
-        "Use list_orders for the authenticated orders list (Bearer token auto-created in memory for this server process). "
-        "Authenticated routes use that same in-process Bearer token."
+        "Bridge to Tienda Apk order_bridge REST API (/api/order_bridge/). "
+        "A single Bearer token is auto-generated per server process and reused for all authenticated calls.\n\n"
+        "TOOLS — call these to act:\n"
+        "  Catalog (public): list_products, get_product\n"
+        "  Device (public): register_device, get_device_status\n"
+        "  Orders (Bearer): list_orders, get_order, create_order, cancel_order\n"
+        "  Profile (Bearer): get_profile, update_profile, replace_profile\n"
+        "  Push (Bearer): register_push_token, update_push_topics\n\n"
+        "RESOURCES — attach or read for context:\n"
+        "  apk://catalog/categories   — product categories list\n"
+        "  apk://catalog/banners      — promotional banners\n"
+        "  apk://catalog/products/{product_id} — single product detail\n"
+        "  apk://store/settings       — shop phone and general config\n"
+        "  apk://locations/municipalities — municipalities + neighborhoods (for address IDs)\n"
+        "  apk://session/status       — device validation status (Bearer)\n"
+        "  apk://session/profile      — contact profile (Bearer)\n"
+        "  apk://orders/{order_id}    — single order detail (Bearer)\n\n"
+        "PROMPTS — use these for multi-step workflows:\n"
+        "  find_products(query, category?, limit?) — search with category resolution\n"
+        "  place_order(items_text) — natural-language cart → create_order with stock handling\n"
+        "  track_order(order_id) — formatted order status and lines\n"
+        "  reorder_last() — repeat most recent order with confirmation\n"
+        "  update_my_address(street, state, municipality_name, neighborhood_name)\n"
+        "  onboard_device(device_key, phone?) — register + validate device"
     ),
     lifespan=app_lifespan,
 )

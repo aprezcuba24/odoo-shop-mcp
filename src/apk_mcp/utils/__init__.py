@@ -8,6 +8,7 @@ from .bearer_token_store import (
 from .exceptions import (
     ApkApiError,
     ApkMcpError,
+    InsufficientStockError,
     MessageApiError,
     NotFoundError,
     UnauthorizedError,
@@ -22,6 +23,7 @@ __all__ = [
     "ApkMcpError",
     "BearerTokenStore",
     "InMemoryBearerTokenStore",
+    "InsufficientStockError",
     "MessageApiError",
     "NotFoundError",
     "UnauthorizedError",

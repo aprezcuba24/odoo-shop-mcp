@@ -1,11 +1,17 @@
-"""Product catalog via generated openapi-python-client."""
+"""Product catalog service — list and detail."""
 
 from __future__ import annotations
 
 from typing import Any
 
 from apk_mcp.generated.order_bridge_client import Client
-from apk_mcp.generated.order_bridge_client.api.default import order_bridge_products
+from apk_mcp.generated.order_bridge_client.api.default import (
+    order_bridge_product_detail,
+    order_bridge_products,
+)
+from apk_mcp.generated.order_bridge_client.models.product_detail_response import (
+    ProductDetailResponse,
+)
 from apk_mcp.generated.order_bridge_client.models.products_page_response import (
     ProductsPageResponse,
 )
@@ -29,4 +35,18 @@ async def list_products_page(
         offset=unset_int(offset),
         category_id=unset_int(category_id),
         search=unset_str(search),
+    )
+
+
+async def get_product_detail(
+    client: Client,
+    *,
+    product_id: int,
+) -> dict[str, Any]:
+    return await client_helper(
+        order_bridge_product_detail,
+        client,
+        success_type=ProductDetailResponse,
+        unexpected_shape_message="Unexpected response shape for product detail",
+        product_id=product_id,
     )

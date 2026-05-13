@@ -71,11 +71,51 @@ También puedes ejecutar por separado `pnpm run mcp:server` y `pnpm run inspecto
 2. En el cliente, añade un servidor MCP remoto con la URL `https://tu-host/mcp`.
 3. Configura `APK_API_BASE_URL` apuntando a tu instancia con el módulo **order_bridge**.
 
-## Tools implementados
+## Surface MCP implementada
 
-- **`list_products`**: `GET /api/order_bridge/products` (público) — paginación y filtros opcionales.
+### Tools
 
-Más endpoints del contrato OpenAPI se pueden añadir en `src/apk_mcp/tools/` siguiendo el mismo patrón.
+| Nombre | Endpoint | Auth |
+|--------|----------|------|
+| `list_products` | `GET /products` | Público |
+| `get_product` | `GET /products/{id}` | Público |
+| `register_device` | `POST /register` | Público |
+| `get_device_status` | `GET /status` | Bearer |
+| `list_orders` | `GET /orders` | Bearer |
+| `get_order` | `GET /orders/{id}` | Bearer |
+| `create_order` | `POST /orders` | Bearer |
+| `cancel_order` | `POST /orders/{id}/cancel` | Bearer |
+| `get_profile` | `GET /profile` | Bearer |
+| `update_profile` | `PATCH /profile` | Bearer |
+| `replace_profile` | `PUT /profile` | Bearer |
+| `register_push_token` | `POST /push/token` | Bearer |
+| `update_push_topics` | `PATCH /push/topics` | Bearer |
+
+### Resources
+
+| URI | Descripción | Auth |
+|-----|-------------|------|
+| `apk://catalog/categories` | Lista de categorías de producto | Público |
+| `apk://catalog/banners` | Banners publicitarios activos | Público |
+| `apk://catalog/products/{product_id}` | Detalle de producto | Público |
+| `apk://store/settings` | Configuración general de la tienda | Público |
+| `apk://locations/municipalities` | Municipios y barrios (nomencladores) | Público |
+| `apk://session/status` | Estado de validación del dispositivo | Bearer |
+| `apk://session/profile` | Perfil del contacto del dispositivo | Bearer |
+| `apk://orders/{order_id}` | Detalle de pedido con líneas | Bearer |
+
+### Prompts
+
+| Nombre | Descripción |
+|--------|-------------|
+| `find_products` | Búsqueda con resolución automática de categoría |
+| `place_order` | Carrito en lenguaje natural → `create_order` con manejo de stock |
+| `track_order` | Estado y líneas formateadas de un pedido |
+| `reorder_last` | Repetir el último pedido con confirmación |
+| `update_my_address` | Actualizar dirección resolviendo IDs de municipio/barrio |
+| `onboard_device` | Registrar dispositivo y reportar estado de validación |
+
+Añadir nuevos endpoints sigue el patrón en `src/apk_mcp/tools/`, `src/apk_mcp/resources/` y `src/apk_mcp/prompts/`; ver también `.agents/skills/apk-mcp-tools/SKILL.md`.
 
 ## Licencia
 

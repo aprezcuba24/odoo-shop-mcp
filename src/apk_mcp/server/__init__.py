@@ -11,6 +11,8 @@ from .app_state import (
 from .server import mcp, run
 
 import apk_mcp.tools  # noqa: F401  # register tools
+import apk_mcp.resources  # noqa: F401  # register resources
+import apk_mcp.prompts  # noqa: F401  # register prompts
 
 __all__ = [
     "AuthenticatedOrderBridgeRef",

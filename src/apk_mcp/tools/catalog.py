@@ -1,4 +1,4 @@
-"""Catalog tools (public product listing)."""
+"""Catalog tools — product list and detail (public)."""
 
 from __future__ import annotations
 
@@ -7,15 +7,15 @@ from typing import Any
 from uncalled_for import Depends
 
 from apk_mcp.server import OrderBridgeClientRef, get_apk_api, mcp
-from apk_mcp.services.order_bridge.products import list_products_page
+from apk_mcp.services.order_bridge.products import get_product_detail, list_products_page
 
 
 @mcp.tool(
     name="list_products",
     description=(
         "List products from the Tienda Apk catalog via GET /api/order_bridge/products. "
-        "This endpoint is public (no device_key). Supports pagination (limit default 80, "
-        "max 200), optional category_id, and case-insensitive partial name search."
+        "Public endpoint (no Bearer). Supports pagination (limit default 80, max 200), "
+        "optional category_id filter, and case-insensitive partial name search."
     ),
 )
 async def list_products(
@@ -32,3 +32,17 @@ async def list_products(
         category_id=category_id,
         search=search,
     )
+
+
+@mcp.tool(
+    name="get_product",
+    description=(
+        "Get full detail for a single product via GET /api/order_bridge/products/{product_id}. "
+        "Public endpoint (no Bearer). Returns name, price, category, barcode, images and unit of measure."
+    ),
+)
+async def get_product(
+    product_id: int,
+    api: OrderBridgeClientRef = Depends(get_apk_api),
+) -> dict[str, Any]:
+    return await get_product_detail(api.client, product_id=product_id)

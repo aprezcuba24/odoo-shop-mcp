@@ -38,3 +38,7 @@ class NotFoundError(ApkApiError):
 
 class MessageApiError(ApkApiError):
     """400 with structured error + message."""
+
+
+class InsufficientStockError(ApkApiError):
+    """400 — one or more order lines exceed available stock."""
