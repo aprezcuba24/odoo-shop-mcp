@@ -1,4 +1,4 @@
-"""Order resources — single order detail by ID (Bearer, templated URI)."""
+"""Recursos de pedidos — detalle de un pedido por ID (Bearer, URI con plantilla)."""
 
 from __future__ import annotations
 

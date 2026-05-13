@@ -1,4 +1,4 @@
-"""Catalog tools — product list and detail (public)."""
+"""Herramientas de catálogo — listado y detalle de productos (público)."""
 
 from __future__ import annotations
 
@@ -13,9 +13,9 @@ from apk_mcp.services.order_bridge.products import get_product_detail, list_prod
 @mcp.tool(
     name="list_products",
     description=(
-        "List products from the Tienda Apk catalog via GET /api/order_bridge/products. "
-        "Public endpoint (no Bearer). Supports pagination (limit default 80, max 200), "
-        "optional category_id filter, and case-insensitive partial name search."
+        "Lista productos del catálogo Tienda Apk (GET /api/order_bridge/products). "
+        "Endpoint público (sin Bearer). Paginación (limit por defecto 80, máx. 200), "
+        "filtro opcional category_id y búsqueda parcial por nombre sin distinguir mayúsculas."
     ),
 )
 async def list_products(
@@ -37,8 +37,9 @@ async def list_products(
 @mcp.tool(
     name="get_product",
     description=(
-        "Get full detail for a single product via GET /api/order_bridge/products/{product_id}. "
-        "Public endpoint (no Bearer). Returns name, price, category, barcode, images and unit of measure."
+        "Obtiene el detalle completo de un producto (GET /api/order_bridge/products/{product_id}). "
+        "Endpoint público (sin Bearer). Devuelve nombre, precio, categoría, código de barras, "
+        "imágenes y unidad de medida."
     ),
 )
 async def get_product(

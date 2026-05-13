@@ -1,4 +1,4 @@
-"""Profile tools — get, partial update (PATCH), full replace (PUT). All Bearer."""
+"""Herramientas de perfil — lectura, actualización parcial (PATCH) y reemplazo total (PUT). Todas Bearer."""
 
 from __future__ import annotations
 
@@ -21,8 +21,8 @@ from apk_mcp.services.order_bridge.profile import (
 @mcp.tool(
     name="get_profile",
     description=(
-        "Get the contact profile for this device via GET /api/order_bridge/profile (Bearer). "
-        "Returns id, name, email, phone and delivery address."
+        "Obtiene el perfil del contacto de este dispositivo (GET /api/order_bridge/profile, Bearer). "
+        "Devuelve id, nombre, email, teléfono y dirección de entrega."
     ),
 )
 async def tool_get_profile(
@@ -34,10 +34,10 @@ async def tool_get_profile(
 @mcp.tool(
     name="update_profile",
     description=(
-        "Partially update the contact profile via PATCH /api/order_bridge/profile (Bearer). "
-        "All parameters are optional; provide only the fields to change. "
-        "Address fields (street, municipality_id, neighborhood_id, state) are merged with "
-        "the saved address — municipality and neighborhood must both be set after the merge."
+        "Actualiza parcialmente el perfil del contacto (PATCH /api/order_bridge/profile, Bearer). "
+        "Todos los parámetros son opcionales; envía solo los campos a cambiar. "
+        "Los campos de dirección (street, municipality_id, neighborhood_id, state) se fusionan con "
+        "la dirección guardada: tras el merge deben quedar municipio y barrio definidos."
     ),
 )
 async def tool_update_profile(
@@ -62,9 +62,9 @@ async def tool_update_profile(
 @mcp.tool(
     name="replace_profile",
     description=(
-        "Fully replace the contact profile via PUT /api/order_bridge/profile (Bearer). "
-        "All fields required: name, street, municipality_id, neighborhood_id, state. "
-        "Use list_municipalities / get the apk://locations/municipalities resource to resolve IDs."
+        "Reemplaza por completo el perfil del contacto (PUT /api/order_bridge/profile, Bearer). "
+        "Campos obligatorios: name, street, municipality_id, neighborhood_id, state. "
+        "Usa el recurso apk://locations/municipalities para resolver IDs de municipio y barrio."
     ),
 )
 async def tool_replace_profile(

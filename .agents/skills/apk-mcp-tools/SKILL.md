@@ -46,10 +46,15 @@ from . import your_feature  # noqa: F401
 
 3. Implement with `@mcp.tool(name="...", description="...")`, `async def`, return `dict[str, Any]`:
 
+`description=` debe estar en **español** (texto orientado al modelo) e incluir método HTTP, ruta, si es público o Bearer y parámetros clave.
+
 ```python
 @mcp.tool(
     name="get_order",
-    description="GET /api/order_bridge/orders/{id} (Bearer). Returns order detail with lines.",
+    description=(
+        "Obtiene el detalle de un pedido (GET /api/order_bridge/orders/{order_id}, Bearer), "
+        "incluyendo líneas."
+    ),
 )
 async def get_order(
     order_id: int,
@@ -57,8 +62,6 @@ async def get_order(
 ) -> dict[str, Any]:
     return await get_order_detail(auth.client, bearer_token=auth.bearer_token, order_id=order_id)
 ```
-
-`description=` must mention HTTP method, path, auth (public vs Bearer) and key parameters.
 
 ## Adding a resource
 

@@ -1,4 +1,4 @@
-"""Catalog resources — categories, banners, and individual product detail."""
+"""Recursos de catálogo — categorías, banners y detalle de producto."""
 
 from __future__ import annotations
 

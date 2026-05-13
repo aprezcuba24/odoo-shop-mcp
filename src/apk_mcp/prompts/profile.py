@@ -1,4 +1,4 @@
-"""Profile prompts — address update with municipality/neighborhood ID resolution."""
+"""Prompts de perfil — actualización de dirección resolviendo IDs de municipio y barrio."""
 
 from __future__ import annotations
 
@@ -10,9 +10,8 @@ from apk_mcp.server import mcp
 @mcp.prompt(
     name="update_my_address",
     description=(
-        "Update the user's delivery address: resolves municipality and neighborhood names "
-        "to IDs using the locations nomenclator, calls update_profile (PATCH), then "
-        "confirms the change with get_profile."
+        "Actualiza la dirección de entrega: resuelve nombres de municipio y barrio a IDs con el "
+        "nomenclador de ubicaciones, llama a update_profile (PATCH) y confirma el cambio con get_profile."
     ),
 )
 def update_my_address(
@@ -23,24 +22,23 @@ def update_my_address(
 ) -> list[Message]:
     return [
         Message(
-            "The user wants to update their delivery address with the following details:\n"
-            f"  Street: {street}\n"
-            f"  State/Province: {state}\n"
-            f"  Municipality: {municipality_name}\n"
-            f"  Neighborhood: {neighborhood_name}\n\n"
-            "Follow these steps:\n"
-            "1. Read the resource apk://locations/municipalities to get the full "
-            "list of municipalities and their neighborhoods.\n"
-            f'2. Find the municipality whose name best matches "{municipality_name}" '
-            "(case-insensitive). Note its id as municipality_id.\n"
-            f'3. Within that municipality, find the neighborhood whose name best matches '
-            f'"{neighborhood_name}". Note its id as neighborhood_id.\n'
-            "4. If either cannot be found, show the available options to the user and ask "
-            "them to choose.\n"
-            "5. Call update_profile with:\n"
+            "El usuario quiere actualizar su dirección de entrega con estos datos:\n"
+            f"  Calle: {street}\n"
+            f"  Provincia / estado: {state}\n"
+            f"  Municipio: {municipality_name}\n"
+            f"  Barrio: {neighborhood_name}\n\n"
+            "Sigue estos pasos:\n"
+            "1. Lee el recurso apk://locations/municipalities para obtener la lista completa de "
+            "municipios y sus barrios.\n"
+            f'2. Encuentra el municipio cuyo nombre coincide mejor (sin distinguir mayúsculas) con '
+            f'"{municipality_name}". Anota su id como municipality_id.\n'
+            f'3. Dentro de ese municipio, encuentra el barrio cuyo nombre coincide mejor con '
+            f'"{neighborhood_name}". Anota su id como neighborhood_id.\n'
+            "4. Si no encuentras alguno, muestra opciones al usuario y pide que elija.\n"
+            "5. Llama a update_profile con:\n"
             f'   street="{street}", state="{state}", '
             "municipality_id=<id>, neighborhood_id=<id>.\n"
-            "6. Call get_profile to verify the saved address and confirm the change to "
-            "the user in a friendly summary."
+            "6. Llama a get_profile para verificar la dirección guardada y confirma el cambio al usuario "
+            "con un resumen claro."
         )
     ]

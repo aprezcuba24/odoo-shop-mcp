@@ -1,4 +1,4 @@
-"""Location resources — municipalities with neighborhoods (public nomenclators)."""
+"""Recursos de ubicación — municipios con barrios (nomencladores públicos)."""
 
 from __future__ import annotations
 

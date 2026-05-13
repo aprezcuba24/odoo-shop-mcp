@@ -1,4 +1,4 @@
-"""Device tools — register and status (mixed auth)."""
+"""Herramientas de dispositivo — registro y estado (autenticación mixta)."""
 
 from __future__ import annotations
 
@@ -19,10 +19,10 @@ from apk_mcp.services.order_bridge.device import get_device_status, register_dev
 @mcp.tool(
     name="register_device",
     description=(
-        "Register or retrieve a device contact via POST /api/order_bridge/register. "
-        "Public endpoint (no Bearer). Provide a stable device_key (e.g. UUID). "
-        "Returns partner_id, created flag, and validation status. "
-        "A validated:false result means the device still needs approval in the Odoo backend."
+        "Registra u obtiene el contacto de un dispositivo (POST /api/order_bridge/register). "
+        "Endpoint público (sin Bearer). Usa un device_key estable (p. ej. UUID). "
+        "Devuelve partner_id, indicador created y estado de validación. "
+        "Si validated es false, el dispositivo sigue pendiente de aprobación en Odoo."
     ),
 )
 async def tool_register_device(
@@ -42,8 +42,8 @@ async def tool_register_device(
 @mcp.tool(
     name="get_device_status",
     description=(
-        "Get validation status for this device's contact via GET /api/order_bridge/status (Bearer). "
-        "Returns partner_id, partner_name, phone and validated flag."
+        "Obtiene el estado de validación del contacto de este dispositivo "
+        "(GET /api/order_bridge/status, Bearer). Devuelve partner_id, partner_name, phone y validated."
     ),
 )
 async def tool_get_device_status(

@@ -1,4 +1,4 @@
-"""Device prompts — guided onboarding flow."""
+"""Prompts de dispositivo — flujo guiado de registro (onboarding)."""
 
 from __future__ import annotations
 
@@ -10,30 +10,28 @@ from apk_mcp.server import mcp
 @mcp.prompt(
     name="onboard_device",
     description=(
-        "Register a new device and report its validation status. "
-        "Calls register_device then get_device_status and presents a clear summary "
-        "including whether human approval is still pending."
+        "Registra un dispositivo nuevo e informa de su estado de validación. "
+        "Llama a register_device y luego get_device_status y resume de forma clara "
+        "si falta aprobación humana."
     ),
 )
 def onboard_device(
     device_key: str,
     phone: str | None = None,
 ) -> list[Message]:
-    phone_line = f"  Phone: {phone}\n" if phone else ""
+    phone_line = f"  Teléfono: {phone}\n" if phone else ""
     return [
         Message(
-            "The user wants to register a new device with the following details:\n"
-            f"  Device key: {device_key}\n"
+            "El usuario quiere registrar un dispositivo nuevo con estos datos:\n"
+            f"  Clave de dispositivo: {device_key}\n"
             f"{phone_line}\n"
-            "Follow these steps:\n"
-            "1. Call register_device with device_key and phone (if provided).\n"
-            "2. Present the result: whether it was newly created (created flag), "
-            "the partner_id, and whether it is validated.\n"
-            "3. Call get_device_status to confirm the current validation state.\n"
-            "4. If validated is false, clearly explain to the user that the device "
-            "registration is pending approval in the store backend (Odoo) and that "
-            "authenticated features (orders, profile) will be available once approved.\n"
-            "5. If validated is true, confirm that the device is fully active and ready "
-            "to use all features."
+            "Sigue estos pasos:\n"
+            "1. Llama a register_device con device_key y phone (si se proporcionó).\n"
+            "2. Presenta el resultado: si es registro nuevo (created), el partner_id y si está validado.\n"
+            "3. Llama a get_device_status para confirmar el estado de validación actual.\n"
+            "4. Si validated es false, explica con claridad que el registro está pendiente de aprobación "
+            "en la tienda (Odoo) y que las funciones con autenticación (pedidos, perfil) estarán "
+            "disponibles cuando se apruebe.\n"
+            "5. Si validated es true, confirma que el dispositivo está activo y listo para usar todas las funciones."
         )
     ]

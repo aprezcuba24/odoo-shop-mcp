@@ -1,4 +1,4 @@
-"""Catalog prompts — guided product search with category resolution."""
+"""Prompts de catálogo — búsqueda guiada de productos con resolución de categoría."""
 
 from __future__ import annotations
 
@@ -10,9 +10,9 @@ from apk_mcp.server import mcp
 @mcp.prompt(
     name="find_products",
     description=(
-        "Guided product search: resolves a category name to its ID, then calls "
-        "list_products with search + category_id. Returns a formatted list with "
-        "name, price, unit of measure and id ready for ordering."
+        "Búsqueda guiada de productos: resuelve el nombre de categoría a su ID y llama a "
+        "list_products con search y category_id. Entrega una lista con nombre, precio, "
+        "unidad de medida e id lista para pedir."
     ),
 )
 def find_products(
@@ -21,21 +21,22 @@ def find_products(
     limit: int = 20,
 ) -> list[Message]:
     lines = [
-        f'The user is looking for products matching "{query}".',
+        f'El usuario busca productos que coincidan con "{query}".',
     ]
     if category:
         lines += [
-            f'They want to filter by category "{category}".',
-            "1. Read the resource apk://catalog/categories to get the full category list.",
-            f'2. Find the category whose name (case-insensitive) best matches "{category}" and note its id.',
-            "3. Call list_products with that category_id, the search query below, and the given limit.",
+            f'Quiere filtrar por la categoría "{category}".',
+            "1. Lee el recurso apk://catalog/categories para obtener la lista completa de categorías.",
+            f'2. Encuentra la categoría cuyo nombre coincide mejor (sin distinguir mayúsculas) con '
+            f'"{category}" y anota su id.',
+            "3. Llama a list_products con ese category_id, la consulta de búsqueda indicada abajo y el limit dado.",
         ]
     else:
-        lines.append("1. Call list_products with the search query and limit below.")
+        lines.append("1. Llama a list_products con la consulta de búsqueda y el limit indicados abajo.")
 
     lines += [
         f'   search="{query}", limit={limit}',
-        "4. Present the results as a concise list: product name, price, unit of measure (uom_name) and id.",
-        "   If no products are found, say so clearly and suggest broadening the search.",
+        "4. Presenta los resultados en una lista breve: nombre del producto, precio, unidad de medida (uom_name) e id.",
+        "   Si no hay productos, dilo claramente y sugiere ampliar la búsqueda.",
     ]
     return [Message("\n".join(lines))]

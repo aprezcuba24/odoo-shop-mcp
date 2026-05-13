@@ -1,4 +1,4 @@
-"""Session resources — device status and contact profile (Bearer)."""
+"""Recursos de sesión — estado del dispositivo y perfil del contacto (Bearer)."""
 
 from __future__ import annotations
 

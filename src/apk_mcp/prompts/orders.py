@@ -1,4 +1,4 @@
-"""Order prompts — place, track and reorder workflows."""
+"""Prompts de pedidos — realizar pedido, seguimiento y repetir último."""
 
 from __future__ import annotations
 
@@ -10,28 +10,28 @@ from apk_mcp.server import mcp
 @mcp.prompt(
     name="place_order",
     description=(
-        "End-to-end order placement: parse natural-language item list, resolve product IDs, "
-        "validate stock, and call create_order. Handles insufficient_stock errors gracefully "
-        "by proposing quantity adjustments or line removal."
+        "Colocar un pedido de extremo a extremo: interpreta la lista de artículos en lenguaje natural, "
+        "resuelve IDs de producto, valida stock y llama a create_order. Ante errores de stock insuficiente, "
+        "propone ajustar cantidades o quitar líneas."
     ),
 )
 def place_order(items_text: str) -> list[Message]:
     return [
         Message(
-            f"The user wants to place an order with the following items:\n\n{items_text}\n\n"
-            "Follow these steps:\n"
-            "1. Parse the item list to extract product names and quantities.\n"
-            "2. For each product name, call list_products with search=<name>, limit=5 to find "
-            "the best match. Confirm the product with the user if there is ambiguity.\n"
-            "3. Build a lines JSON array: [{\"product_id\": <id>, \"qty\": <qty>}, ...].\n"
-            "4. Call create_order with that JSON.\n"
-            "5. If create_order returns an InsufficientStockError:\n"
-            "   - Show the user which products have insufficient stock and how much is available.\n"
-            "   - Offer to adjust quantities to the available amount or remove those lines.\n"
-            "   - Re-call create_order with the adjusted lines after the user confirms.\n"
-            "6. If the device is not validated (device_validated:false in the response), "
-            "warn the user that the order may be pending approval in the store backend.\n"
-            "7. On success, present the order name, id, state and store_state to the user."
+            f"El usuario quiere realizar un pedido con los siguientes artículos:\n\n{items_text}\n\n"
+            "Sigue estos pasos:\n"
+            "1. Interpreta la lista y extrae nombres de producto y cantidades.\n"
+            "2. Por cada nombre, llama a list_products con search=<nombre>, limit=5 para encontrar "
+            "la mejor coincidencia. Si hay ambigüedad, confírmalo con el usuario.\n"
+            "3. Construye un array JSON de líneas: [{\"product_id\": <id>, \"qty\": <cantidad>}, ...].\n"
+            "4. Llama a create_order con ese JSON.\n"
+            "5. Si create_order devuelve InsufficientStockError:\n"
+            "   - Muestra qué productos no tienen stock suficiente y cuánto hay disponible.\n"
+            "   - Ofrece ajustar las cantidades al disponible o eliminar esas líneas.\n"
+            "   - Vuelve a llamar a create_order con las líneas ajustadas tras confirmar el usuario.\n"
+            "6. Si el dispositivo no está validado (device_validated:false en la respuesta), "
+            "advierte al usuario de que el pedido puede quedar pendiente de aprobación en la tienda.\n"
+            "7. Si todo va bien, muestra al usuario el name, id, state y store_state del pedido."
         )
     ]
 
@@ -39,29 +39,29 @@ def place_order(items_text: str) -> list[Message]:
 @mcp.prompt(
     name="track_order",
     description=(
-        "Fetch and format a sale order for the user: state, store_state, delivery status, "
-        "line items with quantities delivered vs ordered, and total amount."
+        "Obtiene y presenta un pedido de venta: estado, store_state, estado de entrega, "
+        "líneas con cantidades entregadas frente a pedidas e importe total."
     ),
 )
 def track_order(order_id: int) -> list[Message]:
     return [
         Message(
-            f"The user wants to track order #{order_id}.\n\n"
-            "1. Read the resource apk://orders/{order_id} (or call get_order if the resource "
-            f"is not available) for order_id={order_id}.\n"
-            "2. Present the following information in a clear, friendly format:\n"
-            "   - Order name and reference (name, order_ref)\n"
-            "   - Order date (date_order)\n"
-            "   - Current state and store_state\n"
-            "   - Delivery status (delivery_status)\n"
-            "   - Delivery address\n"
-            "   - Line items: product name, qty ordered, qty delivered, unit price, subtotal\n"
-            "   - Total amount with currency\n"
-            "3. Translate store_state values for the user:\n"
+            f"El usuario quiere hacer seguimiento del pedido #{order_id}.\n\n"
+            "1. Lee el recurso apk://orders/{order_id} (o llama a get_order si el recurso "
+            f"no está disponible) con order_id={order_id}.\n"
+            "2. Presenta la siguiente información de forma clara y amable:\n"
+            "   - Nombre y referencia del pedido (name, order_ref)\n"
+            "   - Fecha del pedido (date_order)\n"
+            "   - Estado actual y store_state\n"
+            "   - Estado de entrega (delivery_status)\n"
+            "   - Dirección de entrega\n"
+            "   - Líneas: nombre del producto, cantidad pedida, entregada, precio unitario, subtotal\n"
+            "   - Importe total con moneda\n"
+            "3. Traduce los valores de store_state para el usuario:\n"
             "   reviewing→'En revisión', negotiating→'En negociación', "
             "ready_for_delivery→'Listo para entrega', delivered→'Entregado', "
             "canceled→'Cancelado'.\n"
-            "4. Translate delivery_status: pending→'Pendiente', started→'Iniciada', "
+            "4. Traduce delivery_status: pending→'Pendiente', started→'Iniciada', "
             "partial→'Entrega parcial', full→'Entrega completa'."
         )
     ]
@@ -70,23 +70,23 @@ def track_order(order_id: int) -> list[Message]:
 @mcp.prompt(
     name="reorder_last",
     description=(
-        "Repeat the most recent order: fetch the last order, show its lines to the user "
-        "for confirmation, then call create_order with the same lines."
+        "Repite el pedido más reciente: obtiene el último pedido, muestra sus líneas al usuario "
+        "para confirmación y llama a create_order con las mismas líneas."
     ),
 )
 def reorder_last() -> list[Message]:
     return [
         Message(
-            "The user wants to repeat their last order.\n\n"
-            "1. Call list_orders with limit=1, offset=0 to get the most recent order summary.\n"
-            "   If there are no orders, tell the user and stop.\n"
-            "2. Call get_order with that order's id to get the full line details.\n"
-            "3. Show the user the order lines (product name, qty, unit price) and the total, "
-            "and ask them to confirm before placing the new order.\n"
-            "4. Once confirmed, build the lines JSON from the order lines "
-            "(use product_id and qty from each line) and call create_order.\n"
-            "5. Handle InsufficientStockError as described in the place_order prompt: "
-            "show affected products with available stock and ask the user how to proceed.\n"
-            "6. On success, present the new order's name, id and store_state."
+            "El usuario quiere repetir su último pedido.\n\n"
+            "1. Llama a list_orders con limit=1, offset=0 para obtener el resumen del pedido más reciente.\n"
+            "   Si no hay pedidos, infórmalo al usuario y detente.\n"
+            "2. Llama a get_order con el id de ese pedido para ver el detalle de las líneas.\n"
+            "3. Muestra al usuario las líneas (nombre, cantidad, precio unitario) y el total, "
+            "y pide confirmación antes de crear el nuevo pedido.\n"
+            "4. Tras confirmar, construye el JSON de líneas a partir de las líneas del pedido "
+            "(product_id y qty de cada línea) y llama a create_order.\n"
+            "5. Ante InsufficientStockError, actúa como en el prompt place_order: "
+            "muestra productos afectados y stock disponible y pregunta cómo continuar.\n"
+            "6. Si todo va bien, muestra el name, id y store_state del nuevo pedido."
         )
     ]

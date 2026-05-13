@@ -1,4 +1,4 @@
-"""Order tools — list, detail, create, cancel (all Bearer)."""
+"""Herramientas de pedidos — listado, detalle, creación y cancelación (todas Bearer)."""
 
 from __future__ import annotations
 
@@ -23,9 +23,9 @@ from apk_mcp.services.order_bridge.orders import (
 @mcp.tool(
     name="list_orders",
     description=(
-        "List sale orders for this device's contact via GET /api/order_bridge/orders (Bearer). "
-        "Supports pagination (limit, offset) and optional state filter "
-        "(e.g. 'draft', 'sale', 'cancel')."
+        "Lista pedidos de venta del contacto de este dispositivo (GET /api/order_bridge/orders, Bearer). "
+        "Admite paginación (limit, offset) y filtro opcional por estado "
+        "(p. ej. 'draft', 'sale', 'cancel')."
     ),
 )
 async def list_orders(
@@ -46,8 +46,8 @@ async def list_orders(
 @mcp.tool(
     name="get_order",
     description=(
-        "Get full detail of a sale order (lines, amounts, delivery status) via "
-        "GET /api/order_bridge/orders/{order_id} (Bearer)."
+        "Obtiene el detalle completo de un pedido de venta (líneas, importes, estado de entrega) "
+        "vía GET /api/order_bridge/orders/{order_id} (Bearer)."
     ),
 )
 async def get_order(
@@ -64,10 +64,10 @@ async def get_order(
 @mcp.tool(
     name="create_order",
     description=(
-        "Create a new sale order via POST /api/order_bridge/orders (Bearer). "
-        "Pass lines as a JSON array string: '[{\"product_id\": 1, \"qty\": 2.0}, ...]'. "
-        "Returns the created order with id, name, state and store_state. "
-        "Raises an error with product details when any line exceeds available stock."
+        "Crea un pedido de venta nuevo (POST /api/order_bridge/orders, Bearer). "
+        "Pasa las líneas como cadena JSON: '[{\"product_id\": 1, \"qty\": 2.0}, ...]'. "
+        "Devuelve el pedido creado con id, name, state y store_state. "
+        "Si alguna línea supera el stock disponible, devuelve error con detalle de productos."
     ),
 )
 async def tool_create_order(
@@ -85,8 +85,8 @@ async def tool_create_order(
 @mcp.tool(
     name="cancel_order",
     description=(
-        "Cancel a draft sale order via POST /api/order_bridge/orders/{order_id}/cancel (Bearer). "
-        "Only orders in 'draft' state can be cancelled. Returns updated id and state."
+        "Cancela un pedido en borrador (POST /api/order_bridge/orders/{order_id}/cancel, Bearer). "
+        "Solo se pueden cancelar pedidos en estado 'draft'. Devuelve id y state actualizados."
     ),
 )
 async def tool_cancel_order(

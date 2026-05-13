@@ -1,4 +1,4 @@
-"""Store resources — general shop settings (public)."""
+"""Recursos de tienda — configuración general (pública)."""
 
 from __future__ import annotations
 
