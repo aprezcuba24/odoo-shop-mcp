@@ -11,7 +11,7 @@ from apk_mcp.services.order_bridge.locations import list_municipalities
 
 
 @mcp.resource(
-    uri="apk://locations/municipalities",
+    uri="yy-shop://locations/municipalities",
     name="Nomencladores: municipios y barrios",
     description=(
         "Lista completa de municipios con sus barrios (nomencladores de Tienda Apk). "

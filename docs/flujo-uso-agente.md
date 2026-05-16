@@ -85,20 +85,20 @@ Los tools públicos funcionan sin ningún setup previo. Los tools Bearer requier
 
 ### Resources — para leer contexto
 
-Los resources exponen datos de solo lectura bajo el esquema de URI `apk://`. El agente los adjunta como contexto antes de decidir qué acción tomar, o los lee para resolver IDs antes de llamar un tool.
+Los resources exponen datos de solo lectura bajo el esquema de URI `yy-shop://`. El agente los adjunta como contexto antes de decidir qué acción tomar, o los lee para resolver IDs antes de llamar un tool.
 
 | URI | Datos |
 |-----|-------|
-| `apk://catalog/categories` | Lista completa de categorías |
-| `apk://catalog/banners` | Banners publicitarios activos |
-| `apk://catalog/products/{product_id}` | Detalle de un producto |
-| `apk://store/settings` | Teléfono y config general de la tienda |
-| `apk://locations/municipalities` | Municipios y barrios (para resolver IDs de dirección) |
-| `apk://session/status` | Estado de validación del dispositivo (Bearer) |
-| `apk://session/profile` | Perfil del contacto (Bearer) |
-| `apk://orders/{order_id}` | Detalle de un pedido con líneas (Bearer) |
+| `yy-shop://catalog/categories` | Lista completa de categorías |
+| `yy-shop://catalog/banners` | Banners publicitarios activos |
+| `yy-shop://catalog/products/{product_id}` | Detalle de un producto |
+| `yy-shop://store/settings` | Teléfono y config general de la tienda |
+| `yy-shop://locations/municipalities` | Municipios y barrios (para resolver IDs de dirección) |
+| `yy-shop://session/status` | Estado de validación del dispositivo (Bearer) |
+| `yy-shop://session/profile` | Perfil del contacto (Bearer) |
+| `yy-shop://orders/{order_id}` | Detalle de un pedido con líneas (Bearer) |
 
-Ejemplo: antes de actualizar una dirección, el agente lee `apk://locations/municipalities` para resolver el nombre del municipio a un ID numérico, y solo entonces llama al tool `update_profile`.
+Ejemplo: antes de actualizar una dirección, el agente lee `yy-shop://locations/municipalities` para resolver el nombre del municipio a un ID numérico, y solo entonces llama al tool `update_profile`.
 
 ### Prompts — para orquestar flujos multi-paso
 
@@ -130,7 +130,7 @@ sequenceDiagram
     participant M as apk-mcp
 
     U->>A: "Muéstrame los productos de la categoría Lácteos"
-    A->>M: read resource apk://catalog/categories
+    A->>M: read resource yy-shop://catalog/categories
     M-->>A: [{id: 3, name: "Lácteos"}, ...]
     A->>M: call tool list_products(search="", category_id=3, limit=20)
     M-->>A: {products: [...], total: 15}
@@ -161,7 +161,7 @@ sequenceDiagram
     A-->>U: "Registro recibido. Pendiente de aprobación en la tienda."
     Note over O: Operador valida en Odoo
     U->>A: "¿Ya estoy validado?"
-    A->>M: read resource apk://session/status
+    A->>M: read resource yy-shop://session/status
     M-->>A: {validated: true, ...}
     A-->>U: "Dispositivo activo. Puedes hacer pedidos."
 ```
@@ -207,7 +207,7 @@ Muestra el patrón típico de leer un resource para resolver IDs antes de mutar 
 Usuario: "Cambia mi dirección a Calle 5, municipio Holguín, reparto Peralta"
 
 1. Agente activa prompt update_my_address(street="Calle 5", state="Holguín", ...)
-2. Lee apk://locations/municipalities → {id: 8, name: "Holguín", neighborhoods: [{id: 42, name: "Peralta"}, ...]}
+2. Lee yy-shop://locations/municipalities → {id: 8, name: "Holguín", neighborhoods: [{id: 42, name: "Peralta"}, ...]}
 3. Llama update_profile(street="Calle 5", state="Holguín", municipality_id=8, neighborhood_id=42)
 4. Llama get_profile → confirma el cambio al usuario
 ```

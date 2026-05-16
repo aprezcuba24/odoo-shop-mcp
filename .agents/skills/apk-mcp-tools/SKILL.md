@@ -73,12 +73,12 @@ Resources expose read-only data that hosts/users can attach as context.
 
 1. Add `your_domain.py` under `src/apk_mcp/resources/`.
 2. Import it from `src/apk_mcp/resources/__init__.py`.
-3. Use URI scheme `apk://<domain>/<resource>[/{param}]`:
+3. Use URI scheme `yy-shop://<domain>/<resource>[/{param}]`:
 
 **Static resource:**
 ```python
 @mcp.resource(
-    uri="apk://catalog/categories",
+    uri="yy-shop://catalog/categories",
     name="Catálogo: categorías",
     description="Lista completa de categorías (pública).",
     mime_type="application/json",
@@ -92,7 +92,7 @@ async def categories_resource(
 **Templated resource** (URI parameters become function args):
 ```python
 @mcp.resource(
-    uri="apk://catalog/products/{product_id}",
+    uri="yy-shop://catalog/products/{product_id}",
     name="Catálogo: producto",
     description="Detalle de producto por ID (público).",
     mime_type="application/json",

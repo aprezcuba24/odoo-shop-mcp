@@ -76,6 +76,37 @@ También puedes ejecutar por separado `pnpm run mcp:server` y `pnpm run inspecto
 2. En el cliente, añade un servidor MCP remoto con la URL `https://tu-host/mcp`. Si tu host MCP permite cabeceras personalizadas, configura **`X-Apk-Tenant-Id`** (o el nombre definido en `APK_MCP_TENANT_HEADER`) por usuario o workspace para aislar sesiones.
 3. Configura `APK_API_BASE_URL` apuntando a tu instancia con el módulo **order_bridge**.
 
+## VS Code y GitHub Copilot (agentes / Chat)
+
+Este servidor expone **Streamable HTTP**; en VS Code se declara como servidor MCP de tipo **`http`**. El cliente intenta primero el transporte HTTP stream y, si hace falta, compatible con SSE (ver [referencia MCP en VS Code](https://code.visualstudio.com/docs/copilot/reference/mcp-configuration)).
+
+1. Arranca el servidor MCP en local (o detrás de HTTPS si es remoto), p. ej. `python -m apk_mcp`, y anota la URL completa del endpoint (host, puerto y ruta), p. ej. `http://127.0.0.1:7000/mcp`.
+2. Abre la configuración MCP del **workspace** o del **usuario**:
+   - Paleta de comandos: **“MCP: Open Workspace Folder MCP Configuration”** → crea o edita [`.vscode/mcp.json`](https://code.visualstudio.com/docs/copilot/customization/mcp-servers), o
+   - **“MCP: Open User Configuration”** si quieres el mismo servidor en todos los proyectos.
+3. Añade una entrada en `servers` con la URL que incluya el path (`/mcp` por defecto). Para multi-tenant, usa `headers` con la misma cabecera que `APK_MCP_TENANT_HEADER` (por defecto `X-Apk-Tenant-Id`):
+
+```json
+{
+  "servers": {
+    "yyMercadoApk": {
+      "type": "http",
+      "url": "http://127.0.0.1:7000/mcp",
+      "headers": {
+        "X-Apk-Tenant-Id": "vscode-mi-workspace"
+      }
+    }
+  }
+}
+```
+
+4. Comprueba que el servidor aparece y puede iniciarse: paleta **“MCP: List Servers”**. Si cambias tools o recursos en el servidor y el IDE no los refleja, prueba **“MCP: Reset Cached Tools”**.
+5. Revisa el acceso a MCP en ajustes de VS Code si el servidor no se usa en el chat/agente: [`chat.mcp.access`](https://code.visualstudio.com/docs/copilot/reference/copilot-settings) (documentación de **GitHub Copilot** / MCP en VS Code).
+
+**Nota:** Copilot suele mostrar con claridad las **tools** MCP; **resources** y **prompts** dependen de cómo el host los enlaza al chat o a la ventana de agentes. Para depurar el protocolo sin el IDE, usa la sección [Desarrollo / MCP Inspector](#desarrollo--mcp-inspector).
+
+Más detalle en la documentación de GitHub: [Extender Copilot Chat con servidores MCP](https://docs.github.com/en/copilot/customizing-copilot/extending-copilot-chat-with-mcp?tool=vscode).
+
 ## Surface MCP implementada
 
 ### Tools
@@ -100,14 +131,14 @@ También puedes ejecutar por separado `pnpm run mcp:server` y `pnpm run inspecto
 
 | URI | Descripción | Auth |
 |-----|-------------|------|
-| `apk://catalog/categories` | Lista de categorías de producto | Público |
-| `apk://catalog/banners` | Banners publicitarios activos | Público |
-| `apk://catalog/products/{product_id}` | Detalle de producto | Público |
-| `apk://store/settings` | Configuración general de la tienda | Público |
-| `apk://locations/municipalities` | Municipios y barrios (nomencladores) | Público |
-| `apk://session/status` | Estado de validación del dispositivo | Bearer |
-| `apk://session/profile` | Perfil del contacto del dispositivo | Bearer |
-| `apk://orders/{order_id}` | Detalle de pedido con líneas | Bearer |
+| `yy-shop://catalog/categories` | Lista de categorías de producto | Público |
+| `yy-shop://catalog/banners` | Banners publicitarios activos | Público |
+| `yy-shop://catalog/products/{product_id}` | Detalle de producto | Público |
+| `yy-shop://store/settings` | Configuración general de la tienda | Público |
+| `yy-shop://locations/municipalities` | Municipios y barrios (nomencladores) | Público |
+| `yy-shop://session/status` | Estado de validación del dispositivo | Bearer |
+| `yy-shop://session/profile` | Perfil del contacto del dispositivo | Bearer |
+| `yy-shop://orders/{order_id}` | Detalle de pedido con líneas | Bearer |
 
 ### Prompts
 

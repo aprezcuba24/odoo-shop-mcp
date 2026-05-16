@@ -28,7 +28,7 @@ def update_my_address(
             f"  Municipio: {municipality_name}\n"
             f"  Barrio: {neighborhood_name}\n\n"
             "Sigue estos pasos:\n"
-            "1. Lee el recurso apk://locations/municipalities para obtener la lista completa de "
+            "1. Lee el recurso yy-shop://locations/municipalities para obtener la lista completa de "
             "municipios y sus barrios.\n"
             f'2. Encuentra el municipio cuyo nombre coincide mejor (sin distinguir mayúsculas) con '
             f'"{municipality_name}". Anota su id como municipality_id.\n'

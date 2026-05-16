@@ -26,7 +26,7 @@ def find_products(
     if category:
         lines += [
             f'Quiere filtrar por la categoría "{category}".',
-            "1. Lee el recurso apk://catalog/categories para obtener la lista completa de categorías.",
+            "1. Lee el recurso yy-shop://catalog/categories para obtener la lista completa de categorías.",
             f'2. Encuentra la categoría cuyo nombre coincide mejor (sin distinguir mayúsculas) con '
             f'"{category}" y anota su id.',
             "3. Llama a list_products con ese category_id, la consulta de búsqueda indicada abajo y el limit dado.",
