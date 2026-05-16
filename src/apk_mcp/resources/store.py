@@ -11,7 +11,7 @@ from apk_mcp.services.order_bridge.store import get_settings
 
 
 @mcp.resource(
-    uri="yy-shop://store/settings",
+    uri="apk://store/settings",
     name="Tienda: configuración",
     description="Datos generales de la tienda (teléfono, etc.). Endpoint público.",
     mime_type="application/json",

@@ -64,7 +64,7 @@ async def tool_update_profile(
     description=(
         "Reemplaza por completo el perfil del contacto (PUT /api/order_bridge/profile, Bearer). "
         "Campos obligatorios: name, street, municipality_id, neighborhood_id, state. "
-        "Usa el recurso yy-shop://locations/municipalities para resolver IDs de municipio y barrio."
+        "Usa el recurso apk://locations/municipalities para resolver IDs de municipio y barrio."
     ),
 )
 async def tool_replace_profile(

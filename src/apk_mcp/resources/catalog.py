@@ -12,7 +12,7 @@ from apk_mcp.services.order_bridge.products import get_product_detail, list_prod
 
 
 @mcp.resource(
-    uri="yy-shop://catalog/categories",
+    uri="apk://catalog/categories",
     name="Catálogo: categorías",
     description="Lista completa de categorías de producto del catálogo (pública).",
     mime_type="application/json",
@@ -24,7 +24,7 @@ async def categories_resource(
 
 
 @mcp.resource(
-    uri="yy-shop://catalog/products{?limit,offset,category_id,search}",
+    uri="apk://catalog/products{?limit,offset,category_id,search}",
     name="Catálogo: productos",
     description="Lista completa de productos del catálogo (público).",
     mime_type="application/json",
@@ -46,7 +46,7 @@ async def products_resource(
 
 
 @mcp.resource(
-    uri="yy-shop://catalog/products/{product_id}",
+    uri="apk://catalog/products/{product_id}",
     name="Detalle de producto: producto",
     description="Detalle completo de un producto por ID (público): nombre, precio, categoría, código, imágenes y unidad de medida.",
     mime_type="application/json",

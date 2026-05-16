@@ -15,7 +15,7 @@ from apk_mcp.services.order_bridge.orders import get_order_detail
 
 
 @mcp.resource(
-    uri="yy-shop://orders/{order_id}",
+    uri="apk://orders/{order_id}",
     name="Pedido",
     description=(
         "Detalle completo de un pedido de venta por ID (Bearer): "

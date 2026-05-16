@@ -131,14 +131,14 @@ Más detalle en la documentación de GitHub: [Extender Copilot Chat con servidor
 
 | URI | Descripción | Auth |
 |-----|-------------|------|
-| `yy-shop://catalog/categories` | Lista de categorías de producto | Público |
-| `yy-shop://catalog/banners` | Banners publicitarios activos | Público |
-| `yy-shop://catalog/products/{product_id}` | Detalle de producto | Público |
-| `yy-shop://store/settings` | Configuración general de la tienda | Público |
-| `yy-shop://locations/municipalities` | Municipios y barrios (nomencladores) | Público |
-| `yy-shop://session/status` | Estado de validación del dispositivo | Bearer |
-| `yy-shop://session/profile` | Perfil del contacto del dispositivo | Bearer |
-| `yy-shop://orders/{order_id}` | Detalle de pedido con líneas | Bearer |
+| `apk://catalog/categories` | Lista de categorías de producto | Público |
+| `apk://catalog/banners` | Banners publicitarios activos | Público |
+| `apk://catalog/products/{product_id}` | Detalle de producto | Público |
+| `apk://store/settings` | Configuración general de la tienda | Público |
+| `apk://locations/municipalities` | Municipios y barrios (nomencladores) | Público |
+| `apk://session/status` | Estado de validación del dispositivo | Bearer |
+| `apk://session/profile` | Perfil del contacto del dispositivo | Bearer |
+| `apk://orders/{order_id}` | Detalle de pedido con líneas | Bearer |
 
 ### Prompts
 

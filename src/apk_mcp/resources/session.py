@@ -16,7 +16,7 @@ from apk_mcp.services.order_bridge.profile import get_profile
 
 
 @mcp.resource(
-    uri="yy-shop://session/status",
+    uri="apk://session/status",
     name="Sesión: estado del dispositivo",
     description=(
         "Estado de validación del dispositivo (Bearer). "
@@ -32,7 +32,7 @@ async def session_status_resource(
 
 
 @mcp.resource(
-    uri="yy-shop://session/profile",
+    uri="apk://session/profile",
     name="Sesión: perfil del contacto",
     description=(
         "Perfil completo del contacto del dispositivo (Bearer): "

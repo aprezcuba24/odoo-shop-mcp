@@ -47,7 +47,7 @@ def track_order(order_id: int) -> list[Message]:
     return [
         Message(
             f"El usuario quiere hacer seguimiento del pedido #{order_id}.\n\n"
-            "1. Lee el recurso yy-shop://orders/{order_id} (o llama a get_order si el recurso "
+            "1. Lee el recurso apk://orders/{order_id} (o llama a get_order si el recurso "
             f"no está disponible) con order_id={order_id}.\n"
             "2. Presenta la siguiente información de forma clara y amable:\n"
             "   - Nombre y referencia del pedido (name, order_ref)\n"

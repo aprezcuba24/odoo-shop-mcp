@@ -40,9 +40,9 @@ tools = [
     "Adicionar producto al carrito de compras: add_to_cart",
 ]
 resources = [
-    "Categorías de producto: yy-shop://catalog/categories",
-    "Detalle de producto: yy-shop://catalog/products/{product_id}",
-    "Catálogo de productos: yy-shop://catalog/products{?limit,offset,category_id,search}",
+    "Categorías de producto: apk://catalog/categories",
+    "Detalle de producto: apk://catalog/products/{product_id}",
+    "Catálogo de productos: apk://catalog/products{?limit,offset,category_id,search}",
 ]
 prompts = [
     "shop_assistant: flujo guiado — explorar catálogo (resources) y usar la tool add_to_cart",
@@ -73,14 +73,14 @@ mcp = FastMCP(
     #     "  Perfil (Bearer): get_profile, update_profile, replace_profile\n"
     #     "  Push (Bearer): register_push_token, update_push_topics\n\n"
     #     "RESOURCES: adjúntalas o léelas como contexto.\n"
-    #     "  yy-shop://catalog/categories — categorías de producto\n"
-    #     "  yy-shop://catalog/banners — banners promocionales\n"
-    #     "  yy-shop://catalog/products/{product_id} — detalle de un producto\n"
-    #     "  yy-shop://store/settings — teléfono y configuración general\n"
-    #     "  yy-shop://locations/municipalities — municipios y barrios (IDs para dirección)\n"
-    #     "  yy-shop://session/status — validación del dispositivo (Bearer)\n"
-    #     "  yy-shop://session/profile — perfil del contacto (Bearer)\n"
-    #     "  yy-shop://orders/{order_id} — detalle de un pedido (Bearer)\n\n"
+    #     "  apk://catalog/categories — categorías de producto\n"
+    #     "  apk://catalog/banners — banners promocionales\n"
+    #     "  apk://catalog/products/{product_id} — detalle de un producto\n"
+    #     "  apk://store/settings — teléfono y configuración general\n"
+    #     "  apk://locations/municipalities — municipios y barrios (IDs para dirección)\n"
+    #     "  apk://session/status — validación del dispositivo (Bearer)\n"
+    #     "  apk://session/profile — perfil del contacto (Bearer)\n"
+    #     "  apk://orders/{order_id} — detalle de un pedido (Bearer)\n\n"
     #     "PROMPTS: flujos guiados de varios pasos.\n"
     #     "  find_products(query, category?, limit?) — búsqueda con resolución de categoría\n"
     #     "  place_order(items_text) — carrito en lenguaje natural y manejo de stock\n"
