@@ -13,24 +13,26 @@ from apk_mcp.server import (
     get_authenticated_order_bridge,
     mcp,
 )
+from apk_mcp.server.app_state import get_device_token_for_current_tenant
 from apk_mcp.services.order_bridge.device import get_device_status, register_device
 
 
 @mcp.tool(
     name="register_device",
     description=(
-        "Registra u obtiene el contacto de un dispositivo (POST /api/order_bridge/register). "
-        "Endpoint público (sin Bearer). Usa un device_key estable (p. ej. UUID). "
+        "Registra u obtiene el contacto del dispositivo del tenant actual (POST /api/order_bridge/register). "
+        "Endpoint público (sin Bearer). La clave de dispositivo la genera y mantiene el servidor MCP por "
+        "cabecera de tenant (token alineado con el Bearer de rutas autenticadas). "
         "Devuelve partner_id, indicador created y estado de validación. "
         "Si validated es false, el dispositivo sigue pendiente de aprobación en Odoo."
     ),
 )
 async def tool_register_device(
-    device_key: str,
     api: OrderBridgeClientRef = Depends(get_apk_api),
     phone: str | None = None,
     device_info: str | None = None,
 ) -> dict[str, Any]:
+    device_key = await get_device_token_for_current_tenant()
     return await register_device(
         api.client,
         device_key=device_key,

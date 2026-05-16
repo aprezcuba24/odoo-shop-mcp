@@ -5,7 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from apk_mcp.generated.order_bridge_client import Client
-from apk_mcp.utils.bearer_token_store import BearerTokenStore
+from apk_mcp.utils.tenant_credentials import TenantCredentialStore
+
+from .tenant_resolution import resolve_tenant_id
 
 
 @dataclass(frozen=True, slots=True)
@@ -30,11 +32,11 @@ class AuthenticatedOrderBridgeRef:
 
 
 class AppState:
-    __slots__ = ("api", "bearer_token_store")
+    __slots__ = ("api", "tenant_credential_store")
 
     def __init__(self) -> None:
         self.api: Client | None = None
-        self.bearer_token_store: BearerTokenStore | None = None
+        self.tenant_credential_store: TenantCredentialStore | None = None
 
 
 app_state = AppState()
@@ -51,8 +53,18 @@ async def get_authenticated_order_bridge() -> AuthenticatedOrderBridgeRef:
     api = app_state.api
     if api is None:
         raise RuntimeError("API client not initialized; server lifespan did not start.")
-    token_store = app_state.bearer_token_store
-    if token_store is None:
-        raise RuntimeError("Bearer token store not initialized; server lifespan did not start.")
-    bearer_token = await token_store.ensure_token()
+    store = app_state.tenant_credential_store
+    if store is None:
+        raise RuntimeError("Tenant credential store not initialized; server lifespan did not start.")
+    tenant_id = resolve_tenant_id()
+    bearer_token = await store.ensure_device_token(tenant_id)
     return AuthenticatedOrderBridgeRef(client=api, bearer_token=bearer_token)
+
+
+async def get_device_token_for_current_tenant() -> str:
+    """Opaque device key / Bearer secret for ``POST /register`` (same value as authenticated calls)."""
+    store = app_state.tenant_credential_store
+    if store is None:
+        raise RuntimeError("Tenant credential store not initialized; server lifespan did not start.")
+    tenant_id = resolve_tenant_id()
+    return await store.ensure_device_token(tenant_id)

@@ -8,14 +8,14 @@ from fastmcp.server.lifespan import lifespan
 
 from apk_mcp.config import get_settings
 from apk_mcp.generated.order_bridge_client import Client
-from apk_mcp.utils import create_bearer_token_store
+from apk_mcp.utils import create_tenant_credential_store
 from .app_state import app_state
 
 
 @lifespan
 async def app_lifespan(server: FastMCP):
     settings = get_settings()
-    bearer_token_store = create_bearer_token_store()
+    tenant_store = create_tenant_credential_store()
     base = settings.apk_api_base_url.rstrip("/")
     async with httpx.AsyncClient(
         base_url=base,
@@ -28,23 +28,25 @@ async def app_lifespan(server: FastMCP):
         )
         ob_client.set_async_httpx_client(http)
         app_state.api = ob_client
-        app_state.bearer_token_store = bearer_token_store
+        app_state.tenant_credential_store = tenant_store
         try:
-            yield {"settings": settings, "bearer_token_store": bearer_token_store}
+            yield {"settings": settings, "tenant_credential_store": tenant_store}
         finally:
             app_state.api = None
-            app_state.bearer_token_store = None
+            app_state.tenant_credential_store = None
 
 
 mcp = FastMCP(
     name="apk-mcp",
     instructions=(
         "Puente a la API REST order_bridge de Tienda Apk (/api/order_bridge/). "
-        "Se genera un único token Bearer por proceso del servidor y se reutiliza en todas las "
-        "llamadas autenticadas.\n\n"
+        "Multi-tenant: cada cliente MCP debe enviar la cabecera HTTP configurada "
+        "(por defecto X-Apk-Tenant-Id) para aislar dispositivo y Bearer; sin cabecera "
+        "se usa el tenant por defecto (solo desarrollo). El token de dispositivo lo "
+        "genera el servidor por tenant en memoria.\n\n"
         "TOOLS: úsalas para ejecutar acciones.\n"
         "  Catálogo (público): list_products, get_product\n"
-        "  Dispositivo: register_device (público), get_device_status (Bearer)\n"
+        "  Dispositivo: register_device (público; device_key interno por tenant), get_device_status (Bearer)\n"
         "  Pedidos (Bearer): list_orders, get_order, create_order, cancel_order\n"
         "  Perfil (Bearer): get_profile, update_profile, replace_profile\n"
         "  Push (Bearer): register_push_token, update_push_topics\n\n"
@@ -63,7 +65,7 @@ mcp = FastMCP(
         "  track_order(order_id) — estado del pedido y líneas\n"
         "  reorder_last() — repetir el último pedido con confirmación\n"
         "  update_my_address(street, state, municipality_name, neighborhood_name)\n"
-        "  onboard_device(device_key, phone?) — registro y validación del dispositivo"
+        "  onboard_device(phone?) — registro y validación del dispositivo"
     ),
     lifespan=app_lifespan,
 )

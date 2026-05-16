@@ -33,4 +33,5 @@ where = ["src"]
 dev-dependencies = [
     "datamodel-code-generator[http]>=0.57.0",
     "openapi-python-client>=0.28.0",
+    "pytest>=9.0.3",
 ]

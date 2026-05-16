@@ -32,14 +32,19 @@ Copia `.env.example` a `.env` y ajusta:
 | `APK_API_BASE_URL` | URL base del host (ej. `https://mi-odoo.com`) |
 | `APK_API_TIMEOUT` | Timeout HTTP en segundos |
 | `MCP_HOST` / `MCP_PORT` / `MCP_PATH` | Bind y ruta del endpoint MCP (p. ej. `/mcp`) |
+| `APK_MCP_TENANT_HEADER` | Cabecera HTTP que identifica al cliente/inquilino (defecto: `X-Apk-Tenant-Id`) |
+| `APK_MCP_FALLBACK_TENANT_ID` | Valor de tenant usado si falta la cabecera y no exiges cabecera obligatoria (defecto: `default`) |
+| `APK_MCP_REQUIRE_TENANT_HEADER` | Si es `true`, cada petición MCP debe incluir la cabecera de tenant (sin fallback) |
 
-### Autenticación (Bearer)
+### Autenticación (multi-tenant, Bearer y registro)
 
 La API usa `Authorization: Bearer <token>` salvo rutas públicas (catálogo, `POST /register`, etc.).
 
-Este servidor genera **una sola vez por ejecución** un token opaco en memoria ([`InMemoryBearerTokenStore`](src/apk_mcp/utils/bearer_token_store.py)) y lo reutiliza para todas las llamadas autenticadas hasta que reinicies el proceso MCP. **No se guarda en disco**; tras un reinicio el token es distinto.
+El servidor MCP es **multi-tenant**: el cliente debe enviar la cabecera configurada (por defecto **`X-Apk-Tenant-Id`**) en cada petición HTTP al endpoint Streamable HTTP, para aislar dispositivos. Para cada valor de tenant, el proceso genera **en memoria** un token opaco ([`InMemoryTenantCredentialStore`](src/apk_mcp/utils/tenant_credentials.py)) que se usa **tanto** en `POST /register` como `device_key` **como** en el Bearer hacia Tienda Apk. **No hay disco**; al reiniciar el proceso se pierden esas claves (aceptable en desarrollo).
 
-Si Tienda Apk exige que el dispositivo esté registrado en Odoo, un **401** puede indicar que ese token aún no está vinculado en la API, no un fallo local de “falta token”.
+Si no envías cabecera y `APK_MCP_REQUIRE_TENANT_HEADER` es `false`, se usa `APK_MCP_FALLBACK_TENANT_ID` (por defecto `default`), equivalente a un único cliente anónimo en local.
+
+Si Tienda Apk exige que el dispositivo esté registrado en Odoo, un **401** puede indicar que el token aún no está vinculado o aprobado en la API, no un fallo local de “falta token”.
 
 ## Ejecución
 
@@ -68,7 +73,7 @@ También puedes ejecutar por separado `pnpm run mcp:server` y `pnpm run inspecto
 ## Uso con ChatGPT / Cursor
 
 1. Despliega este servidor en una URL HTTPS accesible (o túnel tipo Cloudflare Tunnel / ngrok).
-2. En el cliente, añade un servidor MCP remoto con la URL `https://tu-host/mcp`.
+2. En el cliente, añade un servidor MCP remoto con la URL `https://tu-host/mcp`. Si tu host MCP permite cabeceras personalizadas, configura **`X-Apk-Tenant-Id`** (o el nombre definido en `APK_MCP_TENANT_HEADER`) por usuario o workspace para aislar sesiones.
 3. Configura `APK_API_BASE_URL` apuntando a tu instancia con el módulo **order_bridge**.
 
 ## Surface MCP implementada
@@ -113,7 +118,7 @@ También puedes ejecutar por separado `pnpm run mcp:server` y `pnpm run inspecto
 | `track_order` | Estado y líneas formateadas de un pedido |
 | `reorder_last` | Repetir el último pedido con confirmación |
 | `update_my_address` | Actualizar dirección resolviendo IDs de municipio/barrio |
-| `onboard_device` | Registrar dispositivo y reportar estado de validación |
+| `onboard_device` | Registrar dispositivo (token interno por tenant) y reportar validación |
 
 Añadir nuevos endpoints sigue el patrón en `src/apk_mcp/tools/`, `src/apk_mcp/resources/` y `src/apk_mcp/prompts/`; ver también `.agents/skills/apk-mcp-tools/SKILL.md`.
 

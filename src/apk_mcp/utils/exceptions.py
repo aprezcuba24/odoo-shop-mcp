@@ -9,6 +9,10 @@ class ApkMcpError(Exception):
     """Base error for this package."""
 
 
+class MissingTenantError(ApkMcpError):
+    """MCP request did not carry a tenant id (required header missing or invalid)."""
+
+
 class ApkApiError(ApkMcpError):
     """REST API returned an error response."""
 

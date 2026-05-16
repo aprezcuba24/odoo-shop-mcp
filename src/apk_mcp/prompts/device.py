@@ -10,23 +10,21 @@ from apk_mcp.server import mcp
 @mcp.prompt(
     name="onboard_device",
     description=(
-        "Registra un dispositivo nuevo e informa de su estado de validación. "
-        "Llama a register_device y luego get_device_status y resume de forma clara "
-        "si falta aprobación humana."
+        "Registra el dispositivo del tenant actual e informa de su estado de validación. "
+        "La clave de dispositivo la asigna el servidor MCP; llama a register_device y luego "
+        "get_device_status y resume si falta aprobación humana."
     ),
 )
 def onboard_device(
-    device_key: str,
     phone: str | None = None,
 ) -> list[Message]:
     phone_line = f"  Teléfono: {phone}\n" if phone else ""
     return [
         Message(
-            "El usuario quiere registrar un dispositivo nuevo con estos datos:\n"
-            f"  Clave de dispositivo: {device_key}\n"
+            "El usuario quiere registrar el dispositivo para este tenant (cabecera MCP).\n"
             f"{phone_line}\n"
             "Sigue estos pasos:\n"
-            "1. Llama a register_device con device_key y phone (si se proporcionó).\n"
+            "1. Llama a register_device con phone (si se proporcionó).\n"
             "2. Presenta el resultado: si es registro nuevo (created), el partner_id y si está validado.\n"
             "3. Llama a get_device_status para confirmar el estado de validación actual.\n"
             "4. Si validated es false, explica con claridad que el registro está pendiente de aprobación "

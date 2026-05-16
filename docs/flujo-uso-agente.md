@@ -56,6 +56,8 @@ La ruta y el puerto se controlan con `MCP_PATH` y `MCP_PORT` en `.env` (ver READ
 
 Una vez conectado, el host negocia capacidades con el servidor y el agente puede listar e invocar tools, leer resources y obtener plantillas de prompts.
 
+**Multi-tenant (Streamable HTTP):** cada petición HTTP al endpoint MCP puede llevar la cabecera **`X-Apk-Tenant-Id`** (nombre configurable con `APK_MCP_TENANT_HEADER`) para aislar dispositivos y pedidos por cliente. Si no la envías y `APK_MCP_REQUIRE_TENANT_HEADER` es `false`, el servidor usa el tenant de respaldo `APK_MCP_FALLBACK_TENANT_ID` (por defecto `default`), adecuado para desarrollo local.
+
 ---
 
 ## 3. Las tres primitivas MCP y cómo usarlas
@@ -109,7 +111,7 @@ Los prompts son plantillas de instrucción que el servidor devuelve como `list[M
 | `track_order(order_id)` | Estado y líneas formateadas de un pedido |
 | `reorder_last()` | Repetir el último pedido con confirmación |
 | `update_my_address(street, state, municipality_name, neighborhood_name)` | Actualizar dirección resolviendo IDs |
-| `onboard_device(device_key, phone?)` | Registrar dispositivo y reportar estado de validación |
+| `onboard_device(phone?)` | Registrar dispositivo y reportar estado de validación |
 
 Cuándo usarlos: activa un prompt cuando la intención del usuario requiere **varias llamadas coordinadas**. Para una consulta simple (`"¿qué productos hay?"`) basta con invocar el tool directamente.
 
@@ -148,10 +150,11 @@ sequenceDiagram
     participant M as apk-mcp
     participant O as Odoo
 
-    U->>A: "Registra mi dispositivo con clave ABC123"
-    A->>M: prompt onboard_device(device_key="ABC123")
+    U->>A: "Registra mi dispositivo (este workspace)"
+    A->>M: prompt onboard_device(phone="+53...")
+    Note over A,M: El cliente MCP envía cabecera X-Apk-Tenant-Id si hay varios usuarios
     Note over A,M: El prompt guía los pasos siguientes
-    A->>M: call tool register_device(device_key="ABC123")
+    A->>M: call tool register_device
     M-->>A: {created: true, partner_id: 42, validated: false}
     A->>M: call tool get_device_status
     M-->>A: {validated: false, ...}
@@ -163,7 +166,7 @@ sequenceDiagram
     A-->>U: "Dispositivo activo. Puedes hacer pedidos."
 ```
 
-**Nota importante sobre Bearer:** el servidor MCP genera un único token opaco en memoria al arrancar. Ese token es el que la API de Tienda Apk asocia al dispositivo registrado. Si reinicias el servidor MCP, el token cambia y el dispositivo deberá re-validarse en Odoo. Ver sección 5.
+**Nota sobre credenciales:** el servidor MCP genera **por tenant** un token opaco en memoria y lo usa como `device_key` en `POST /register` y como Bearer en Tienda Apk. Distintos valores de `X-Apk-Tenant-Id` obtienen distintos dispositivos. Si reinicias el proceso MCP, las claves en memoria se pierden y puede hacer falta volver a registrar en Odoo. Ver sección 5.
 
 ### 4.3 Realizar un pedido
 
@@ -213,15 +216,15 @@ Usuario: "Cambia mi dirección a Calle 5, municipio Holguín, reparto Peralta"
 
 ## 5. Autenticación y límites operativos
 
-### Token Bearer en memoria
+### Credenciales por tenant en memoria
 
-El servidor genera **un único token Bearer por proceso** usando `secrets.token_urlsafe`. Ese token se almacena solo en memoria (`InMemoryBearerTokenStore`) y se reutiliza para todas las llamadas autenticadas durante la vida del proceso.
+El servidor mantiene un mapa **tenant_id → token** (`InMemoryTenantCredentialStore`) generado con `secrets.token_urlsafe`. Ese mismo valor se envía como **`device_key`** al registrar y como **Bearer** en rutas autenticadas hacia Tienda Apk.
 
 Consecuencias para el integrador:
 
-- **No hay persistencia en disco.** Si reinicias el servidor MCP, el token cambia. La sesión del dispositivo en Odoo queda huérfana hasta que se re-registre.
-- **Una sola identidad de dispositivo por instancia MCP.** Todos los agentes que se conecten a la misma instancia comparten el mismo dispositivo y, por tanto, los mismos pedidos y perfil.
-- **Un 401 remoto no siempre indica problema local.** Si la API devuelve 401, puede ser que el dispositivo todavía no esté aprobado en Odoo, no necesariamente que falte el token en el cliente.
+- **No hay persistencia en disco.** Si reinicias el proceso MCP, los tokens por tenant se regeneran; en Odoo puede ser necesario repetir registro/aprobación según tu política.
+- **Varios usuarios en paralelo:** configura cabeceras distintas por cliente (`X-Apk-Tenant-Id` u otra vía `APK_MCP_TENANT_HEADER`) para que no compartan pedidos ni perfil.
+- **Un 401 remoto no siempre indica problema local.** Puede ser dispositivo no aprobado en Odoo, no solo un fallo de token.
 
 ### Rutas públicas vs Bearer
 
@@ -236,6 +239,6 @@ Antes de conectar un agente a este MCP, verifica lo siguiente:
 1. El servidor MCP está desplegado y accesible (HTTPS si el cliente es remoto).
 2. `APK_API_BASE_URL` apunta a la instancia Odoo con el módulo `order_bridge` activo.
 3. La URL del endpoint MCP (`/mcp`) está configurada en el host del agente.
-4. Si el agente necesita rutas Bearer: un dispositivo está registrado y validado en Odoo para esta instancia del servidor.
+4. Si el agente necesita rutas Bearer: el dispositivo del **tenant actual** (cabecera MCP) está registrado y validado en Odoo.
 5. El system prompt del agente menciona que debe usar los **prompts MCP** para flujos multi-paso (`place_order`, `find_products`, etc.) en lugar de reinventar la orquestación.
-6. Se contempla el ciclo de vida del token: si el servidor MCP reinicia, el dispositivo se des-valida y hay que repetir el onboarding.
+6. Se contempla el ciclo de vida del token en memoria: un reinicio del servidor MCP regenera credenciales; en despliegues multi-usuario envía siempre la cabecera de tenant acordada.

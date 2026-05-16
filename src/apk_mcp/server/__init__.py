@@ -7,6 +7,7 @@ from .app_state import (
     OrderBridgeClientRef,
     get_apk_api,
     get_authenticated_order_bridge,
+    get_device_token_for_current_tenant,
 )
 from .server import mcp, run
 
@@ -19,6 +20,7 @@ __all__ = [
     "OrderBridgeClientRef",
     "get_apk_api",
     "get_authenticated_order_bridge",
+    "get_device_token_for_current_tenant",
     "mcp",
     "run",
 ]

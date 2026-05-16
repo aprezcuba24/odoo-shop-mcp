@@ -22,6 +22,25 @@ class Settings(BaseSettings):
     mcp_port: int = Field(default=7000, ge=1, le=65535)
     mcp_path: str = Field(default="/mcp")
 
+    apk_mcp_tenant_header: str = Field(
+        default="X-Apk-Tenant-Id",
+        description=(
+            "HTTP header that identifies the MCP client for multi-tenant isolation "
+            "(same value keys the in-memory device/Bearer token)."
+        ),
+    )
+    apk_mcp_fallback_tenant_id: str = Field(
+        default="default",
+        description=(
+            "Tenant id when the header is absent and APK_MCP_REQUIRE_TENANT_HEADER is false "
+            "(local dev / single anonymous client)."
+        ),
+    )
+    apk_mcp_require_tenant_header: bool = Field(
+        default=False,
+        description="If true, every request must include the tenant header; fallback is ignored.",
+    )
+
 
 def get_settings() -> Settings:
     return Settings()
