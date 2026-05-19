@@ -10,18 +10,13 @@ from .exceptions import (
     ApkMcpError,
     InsufficientStockError,
     MessageApiError,
-    MissingTenantError,
+    MissingShopKeyError,
     NotFoundError,
     UnauthorizedError,
     ValidationApiError,
 )
 from .http_client import ApkApiClient
 from .openapi_detailed import client_helper, message_from_error_body, raise_apk_http
-from .tenant_credentials import (
-    InMemoryTenantCredentialStore,
-    TenantCredentialStore,
-    create_tenant_credential_store,
-)
 
 __all__ = [
     "ApkApiClient",
@@ -29,17 +24,14 @@ __all__ = [
     "ApkMcpError",
     "BearerTokenStore",
     "InMemoryBearerTokenStore",
-    "InMemoryTenantCredentialStore",
     "InsufficientStockError",
     "MessageApiError",
-    "MissingTenantError",
+    "MissingShopKeyError",
     "NotFoundError",
-    "TenantCredentialStore",
     "UnauthorizedError",
     "ValidationApiError",
     "client_helper",
     "create_bearer_token_store",
-    "create_tenant_credential_store",
     "message_from_error_body",
     "raise_apk_http",
 ]

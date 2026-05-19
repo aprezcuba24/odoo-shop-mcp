@@ -40,7 +40,7 @@ async def bearer_authorization(client: Client, token: str):
     """
     http = client.get_async_httpx_client()
     prior = http.headers.get("Authorization")
-    http.headers["Authorization"] = f"Bearer {token}"
+    http.headers["Authorization"] = token
     try:
         yield
     finally:

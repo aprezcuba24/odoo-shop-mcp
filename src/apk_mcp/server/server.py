@@ -8,14 +8,12 @@ from fastmcp.server.lifespan import lifespan
 
 from apk_mcp.config import get_settings
 from apk_mcp.generated.order_bridge_client import Client
-from apk_mcp.utils import create_tenant_credential_store
 from .app_state import app_state
 
 
 @lifespan
 async def app_lifespan(server: FastMCP):
     settings = get_settings()
-    tenant_store = create_tenant_credential_store()
     base = settings.apk_api_base_url.rstrip("/")
     async with httpx.AsyncClient(
         base_url=base,
@@ -28,12 +26,10 @@ async def app_lifespan(server: FastMCP):
         )
         ob_client.set_async_httpx_client(http)
         app_state.api = ob_client
-        app_state.tenant_credential_store = tenant_store
         try:
-            yield {"settings": settings, "tenant_credential_store": tenant_store}
+            yield {"settings": settings}
         finally:
             app_state.api = None
-            app_state.tenant_credential_store = None
 
 
 tools = [

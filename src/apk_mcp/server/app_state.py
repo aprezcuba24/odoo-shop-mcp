@@ -7,12 +7,27 @@ from dataclasses import dataclass
 from fastmcp.server.dependencies import get_http_request
 
 from apk_mcp.generated.order_bridge_client import Client
-from apk_mcp.utils.tenant_credentials import TenantCredentialStore
-
-from .tenant_resolution import resolve_tenant_id
-
+from apk_mcp.utils.exceptions import MissingShopKeyError
 
 SHOP_KEY_HEADER = "shop-key"
+
+
+def resolve_shop_key() -> str:
+    """Read shop-key header from the current HTTP request (passthrough value)."""
+    try:
+        request = get_http_request()
+    except RuntimeError as exc:
+        raise MissingShopKeyError(
+            "No HTTP request context; cannot resolve shop-key. "
+            "Use Streamable HTTP with the shop-key header."
+        ) from exc
+
+    raw = request.headers.get(SHOP_KEY_HEADER)
+    if raw:
+        return raw
+
+    raise MissingShopKeyError(f"Missing required HTTP header {SHOP_KEY_HEADER!r}.")
+
 
 @dataclass(frozen=True, slots=True)
 class OrderBridgeClientRef:
@@ -36,11 +51,10 @@ class AuthenticatedOrderBridgeRef:
 
 
 class AppState:
-    __slots__ = ("api", "tenant_credential_store")
+    __slots__ = ("api",)
 
     def __init__(self) -> None:
         self.api: Client | None = None
-        self.tenant_credential_store: TenantCredentialStore | None = None
 
 
 app_state = AppState()
@@ -57,19 +71,4 @@ async def get_authenticated_order_bridge() -> AuthenticatedOrderBridgeRef:
     api = app_state.api
     if api is None:
         raise RuntimeError("API client not initialized; server lifespan did not start.")
-    store = app_state.tenant_credential_store
-    if store is None:
-        raise RuntimeError("Tenant credential store not initialized; server lifespan did not start.")
-    # tenant_id = resolve_tenant_id()
-    request = get_http_request()
-    bearer_token = request.headers.get(SHOP_KEY_HEADER)
-    return AuthenticatedOrderBridgeRef(client=api, bearer_token=bearer_token)
-
-
-async def get_device_token_for_current_tenant() -> str:
-    """Opaque device key / Bearer secret for ``POST /register`` (same value as authenticated calls)."""
-    store = app_state.tenant_credential_store
-    if store is None:
-        raise RuntimeError("Tenant credential store not initialized; server lifespan did not start.")
-    tenant_id = resolve_tenant_id()
-    return await store.ensure_device_token(tenant_id)
+    return AuthenticatedOrderBridgeRef(client=api, bearer_token=resolve_shop_key())

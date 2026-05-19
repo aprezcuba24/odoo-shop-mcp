@@ -9,8 +9,8 @@ class ApkMcpError(Exception):
     """Base error for this package."""
 
 
-class MissingTenantError(ApkMcpError):
-    """MCP request did not carry a tenant id (required header missing or invalid)."""
+class MissingShopKeyError(ApkMcpError):
+    """MCP request did not carry a valid shop-key header."""
 
 
 class ApkApiError(ApkMcpError):

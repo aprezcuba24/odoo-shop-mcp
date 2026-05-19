@@ -18,11 +18,11 @@ description: >-
 2. **`src/apk_mcp/resources/`** — MCP resources: `@mcp.resource`, static or templated URIs. Read-only, browseable by hosts/users.
 3. **`src/apk_mcp/prompts/`** — MCP prompts: `@mcp.prompt`, multi-step workflow templates that return `list[Message]`.
 4. **`src/apk_mcp/services/order_bridge/`** — One module per domain; calls the **generated** `openapi-python-client` and uses **`client_helper`** / **`bearer_authorization`** from `apk_mcp.utils.openapi_detailed`.
-5. **`src/apk_mcp/server/app_state.py`** — Lifespan singletons: `Client`, `TenantCredentialStore` (mapa en memoria por cabecera de tenant). Exposes **`get_apk_api`** (public), **`get_authenticated_order_bridge`** (Bearer por tenant), y **`get_device_token_for_current_tenant`** cuando un tool público necesite el mismo token que `POST /register` (`register_device`).
+5. **`src/apk_mcp/server/app_state.py`** — Lifespan singleton: generated `Client`. Exposes **`get_apk_api`** (public), **`get_authenticated_order_bridge`** (Bearer from request), and **`resolve_shop_key()`** when a public tool needs the same token as `POST /register` (`register_device`).
 
-## Multi-tenant (Streamable HTTP)
+## Autenticación (`shop-key`, Streamable HTTP)
 
-Cada petición HTTP al MCP debe poder identificar al inquilino vía **`X-Apk-Tenant-Id`** (o `APK_MCP_TENANT_HEADER`). [`resolve_tenant_id`](src/apk_mcp/server/tenant_resolution.py) lee la cabecera con `get_http_request()` de FastMCP. Sin cabecera y con fallback permitido, se usa `APK_MCP_FALLBACK_TENANT_ID`. El token de dispositivo/Bearer es **por tenant**, no global al proceso.
+Cada petición HTTP al MCP debe incluir la cabecera **`shop-key`** con el token del dispositivo/tienda (p. ej. `Bearer 99031c76-d288-41ea-866b-ef656f58e497`). [`resolve_shop_key`](src/apk_mcp/server/app_state.py) la lee con `get_http_request()` de FastMCP, extrae el token y lo reenvía al backend como `Authorization: Bearer <token>`.
 
 Tools and resources stay thin; services own endpoint selection, `UNSET` optional args, and success/error typing.
 
