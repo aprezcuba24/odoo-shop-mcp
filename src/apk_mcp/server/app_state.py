@@ -4,11 +4,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from fastmcp.server.dependencies import get_http_request
+
 from apk_mcp.generated.order_bridge_client import Client
 from apk_mcp.utils.tenant_credentials import TenantCredentialStore
 
 from .tenant_resolution import resolve_tenant_id
 
+
+SHOP_KEY_HEADER = "shop-key"
 
 @dataclass(frozen=True, slots=True)
 class OrderBridgeClientRef:
@@ -56,8 +60,9 @@ async def get_authenticated_order_bridge() -> AuthenticatedOrderBridgeRef:
     store = app_state.tenant_credential_store
     if store is None:
         raise RuntimeError("Tenant credential store not initialized; server lifespan did not start.")
-    tenant_id = resolve_tenant_id()
-    bearer_token = await store.ensure_device_token(tenant_id)
+    # tenant_id = resolve_tenant_id()
+    request = get_http_request()
+    bearer_token = request.headers.get(SHOP_KEY_HEADER)
     return AuthenticatedOrderBridgeRef(client=api, bearer_token=bearer_token)
 
 
