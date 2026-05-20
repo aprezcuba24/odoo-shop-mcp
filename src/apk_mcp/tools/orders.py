@@ -12,6 +12,8 @@ from apk_mcp.server import (
     get_authenticated_order_bridge,
     mcp,
 )
+from apk_mcp.server.app_state import resolve_shop_key
+from apk_mcp.services.cart import cart_store, lines_payload
 from apk_mcp.services.order_bridge.orders import (
     cancel_order,
     create_order,
@@ -19,6 +21,7 @@ from apk_mcp.services.order_bridge.orders import (
     get_order_detail,
     list_orders_page,
 )
+from apk_mcp.utils.exceptions import InsufficientStockError
 
 
 @mcp.tool(
@@ -98,6 +101,60 @@ async def tool_create_order(
         bearer_token=auth.bearer_token,
         lines=lines,
     )
+
+
+@mcp.tool(
+    name="checkout_cart",
+    description=(
+        "Confirma el pedido con el carrito en memoria del dispositivo actual "
+        "(POST /api/order_bridge/orders, Bearer). Lee las líneas del carrito asociado "
+        "a la cabecera HTTP shop-key (add_to_cart / get_cart). Si el pedido se crea "
+        "correctamente, vacía el carrito. Devuelve ok=true con order (id, name, state, "
+        "store_state). Si el carrito está vacío, ok=false y error=empty_cart. "
+        "Si falta stock, ok=false, error=insufficient_stock y products con product_id y "
+        "available_qty para que el usuario ajuste cantidades y reintente."
+    ),
+)
+async def checkout_cart(
+    auth: AuthenticatedOrderBridgeRef = Depends(get_authenticated_order_bridge),
+) -> dict[str, Any]:
+    client_key = resolve_shop_key()
+    cart_lines = await cart_store.get_lines(client_key)
+    lines_submitted = lines_payload(cart_lines)
+
+    if not lines_submitted:
+        return {
+            "ok": False,
+            "error": "empty_cart",
+            "message": (
+                "El carrito está vacío. Añade productos con add_to_cart antes de confirmar."
+            ),
+            "lines": [],
+        }
+
+    try:
+        order = await create_order(
+            auth.client,
+            bearer_token=auth.bearer_token,
+            lines=lines_submitted,
+        )
+    except InsufficientStockError as exc:
+        body = exc.body or {}
+        return {
+            "ok": False,
+            "error": "insufficient_stock",
+            "message": str(exc) or body.get("message", "Stock insuficiente."),
+            "products": body.get("products", []),
+            "lines_submitted": lines_submitted,
+        }
+
+    await cart_store.clear(client_key)
+    return {
+        "ok": True,
+        "order": order,
+        "lines_submitted": lines_submitted,
+        "cart_cleared": True,
+    }
 
 
 @mcp.tool(

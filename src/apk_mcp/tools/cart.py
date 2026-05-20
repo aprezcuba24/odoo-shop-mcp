@@ -6,11 +6,7 @@ from typing import Any
 
 from apk_mcp.server import mcp
 from apk_mcp.server.app_state import resolve_shop_key
-from apk_mcp.services.cart import CartLine, cart_store
-
-
-def _lines_payload(lines: list[CartLine]) -> list[dict[str, float | int]]:
-    return [{"product_id": line.product_id, "qty": line.qty} for line in lines]
+from apk_mcp.services.cart import CartLine, cart_store, lines_payload
 
 
 def _cart_response(
@@ -24,7 +20,7 @@ def _cart_response(
     )
     payload: dict[str, Any] = {
         "client_key": client_key,
-        "lines": _lines_payload(lines),
+        "lines": lines_payload(lines),
         "line_count": line_count,
         "total_qty": total_qty,
     }

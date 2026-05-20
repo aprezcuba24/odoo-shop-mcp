@@ -34,6 +34,7 @@ async def app_lifespan(server: FastMCP):
 
 tools = [
     "Carrito en memoria (shop-key del cliente): add_to_cart, get_cart, clear_cart",
+    "Confirmar pedido desde carrito: checkout_cart",
     "Último pedido del usuario: get_last_order",
 ]
 resources = [
@@ -44,7 +45,7 @@ resources = [
     "Detalle de pedido: apk://orders/{order_id}",
 ]
 prompts = [
-    "shop_assistant: flujo guiado — explorar catálogo (resources) y usar la tool add_to_cart",
+    "shop_assistant: flujo guiado — catálogo (resources), carrito y checkout_cart",
 ]
 instructions = (
     "Esto es la tienda de YY-Mercado que permite comprar productos a los clientes.\n"

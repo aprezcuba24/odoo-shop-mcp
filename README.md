@@ -122,6 +122,7 @@ Más detalle en la documentación de GitHub: [Extender Copilot Chat con servidor
 | `get_last_order` | `GET /orders?limit=1` + `GET /orders/{id}` | Bearer |
 | `get_order` | `GET /orders/{id}` | Bearer |
 | `create_order` | `POST /orders` | Bearer |
+| `checkout_cart` | `POST /orders` (líneas del carrito en memoria) | Bearer |
 | `cancel_order` | `POST /orders/{id}/cancel` | Bearer |
 | `get_profile` | `GET /profile` | Bearer |
 | `update_profile` | `PATCH /profile` | Bearer |
