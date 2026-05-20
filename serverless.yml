@@ -1,0 +1,66 @@
+service: apk-mcp
+frameworkVersion: "4"
+
+provider:
+  name: aws
+  runtime: python3.12
+  timeout: 30
+  memorySize: 512
+  environment:
+    APK_API_BASE_URL: ${env:APK_API_BASE_URL}
+    MCP_PATH: /mcp
+    APK_API_TIMEOUT: "30"
+
+functions:
+  mcp:
+    handler: apk_mcp.lambda_handler.handler
+    events:
+      - httpApi:
+          path: /mcp
+          method: ANY
+
+custom:
+  pythonRequirements:
+    useUv: true
+    installer: uv
+    uvOptionalDependencies:
+      - lambda
+    dockerizePip: non-linux
+    slim: true
+    noDeploy:
+      - cryptography
+      - authlib
+      - joserfc
+      - cffi
+      - pycparser
+      - rich
+      - cyclopts
+      - docutils
+      - pygments
+      - markdown-it-py
+      - mdurl
+      - uvicorn
+      - watchfiles
+      - websockets
+      - opentelemetry-api
+      - importlib-metadata
+      - zipp
+      - keyring
+      - secretstorage
+      - jeepney
+      - jaraco.classes
+      - jaraco.context
+      - jaraco.functools
+      - pyperclip
+      - dnspython
+      - email-validator
+
+package:
+  patterns:
+    - "!tests/**"
+    - "!**/*.md"
+    - "!node_modules/**"
+    - "!.venv/**"
+    - "!.git/**"
+    - "!.serverless/**"
+    - "!.requirements/**"

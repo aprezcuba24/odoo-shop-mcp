@@ -10,10 +10,13 @@
     "test": "sh -c 'if command -v uv >/dev/null 2>&1; then exec uv run pytest \"$@\"; elif [ -x .venv/bin/python ]; then exec .venv/bin/python -m pytest \"$@\"; else exec python3 -m pytest \"$@\"; fi' sh",
     "gen:order-bridge-types": "bash scripts/gen-order-bridge-api.sh",
     "inspector": "mcp-inspector",
-    "dev": "concurrently -n mcp,inspector -c blue,magenta \"pnpm run mcp:server\" \"pnpm run inspector\""
+    "dev": "concurrently -n mcp,inspector -c blue,magenta \"pnpm run mcp:server\" \"pnpm run inspector\"",
+    "deploy": "serverless deploy",
+    "deploy:prod": "serverless deploy --stage prod"
   },
   "devDependencies": {
     "@modelcontextprotocol/inspector": "^0.17.2",
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "serverless": "^4.22.0"
   }
 }
