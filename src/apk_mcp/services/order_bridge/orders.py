@@ -30,7 +30,7 @@ from apk_mcp.generated.order_bridge_client.models.orders_page_response import (
 from apk_mcp.generated.order_bridge_client.models.sale_order_detail_response import (
     SaleOrderDetailResponse,
 )
-from apk_mcp.utils.exceptions import InsufficientStockError
+from apk_mcp.utils.exceptions import InsufficientStockError, NotFoundError
 from apk_mcp.utils.openapi_detailed import (
     bearer_authorization,
     client_helper,
@@ -64,6 +64,32 @@ async def list_orders_page(
             offset=unset_int(offset),
             state=unset_str(state),
         )
+
+
+async def get_last_order(
+    client: Client,
+    *,
+    bearer_token: str,
+) -> dict[str, Any]:
+    page = await list_orders_page(
+        client,
+        bearer_token=bearer_token,
+        limit=1,
+        offset=0,
+    )
+    items = page.get("items") or []
+    if not items:
+        raise NotFoundError(
+            "No hay pedidos para este dispositivo",
+            status_code=404,
+            body=None,
+        )
+    order_id = items[0]["id"]
+    return await get_order_detail(
+        client,
+        bearer_token=bearer_token,
+        order_id=order_id,
+    )
 
 
 async def get_order_detail(

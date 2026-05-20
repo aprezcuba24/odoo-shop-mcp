@@ -7,6 +7,7 @@ from apk_mcp.services.order_bridge.locations import list_municipalities
 from apk_mcp.services.order_bridge.orders import (
     cancel_order,
     create_order,
+    get_last_order,
     get_order_detail,
     list_orders_page,
 )
@@ -19,6 +20,7 @@ __all__ = [
     "cancel_order",
     "create_order",
     "get_device_status",
+    "get_last_order",
     "get_order_detail",
     "get_product_detail",
     "get_profile",

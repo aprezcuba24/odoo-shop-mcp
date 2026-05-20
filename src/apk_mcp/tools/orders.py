@@ -15,6 +15,7 @@ from apk_mcp.server import (
 from apk_mcp.services.order_bridge.orders import (
     cancel_order,
     create_order,
+    get_last_order,
     get_order_detail,
     list_orders_page,
 )
@@ -40,6 +41,23 @@ async def list_orders(
         limit=limit,
         offset=offset,
         state=state,
+    )
+
+
+@mcp.tool(
+    name="get_last_order",
+    description=(
+        "Obtiene el detalle del pedido más reciente del contacto de este dispositivo "
+        "(GET /api/order_bridge/orders?limit=1 y GET /api/order_bridge/orders/{order_id}, Bearer). "
+        "Incluye líneas, importes y estado. Falla si el usuario no tiene pedidos."
+    ),
+)
+async def get_last_order_tool(
+    auth: AuthenticatedOrderBridgeRef = Depends(get_authenticated_order_bridge),
+) -> dict[str, Any]:
+    return await get_last_order(
+        auth.client,
+        bearer_token=auth.bearer_token,
     )
 
 

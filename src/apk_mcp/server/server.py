@@ -34,6 +34,7 @@ async def app_lifespan(server: FastMCP):
 
 tools = [
     "Adicionar producto al carrito de compras: add_to_cart",
+    "Último pedido del usuario: get_last_order",
 ]
 resources = [
     "Categorías de producto: apk://catalog/categories",
