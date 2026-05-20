@@ -1,4 +1,4 @@
-"""Recursos de pedidos — detalle de un pedido por ID (Bearer, URI con plantilla)."""
+"""Recursos de pedidos — listado paginado y detalle por ID (Bearer)."""
 
 from __future__ import annotations
 
@@ -11,7 +11,32 @@ from apk_mcp.server import (
     get_authenticated_order_bridge,
     mcp,
 )
-from apk_mcp.services.order_bridge.orders import get_order_detail
+from apk_mcp.services.order_bridge.orders import get_order_detail, list_orders_page
+
+
+@mcp.resource(
+    uri="apk://orders{?limit,offset,state}",
+    name="Pedidos del usuario",
+    description=(
+        "Listado paginado de pedidos de venta del contacto de este dispositivo "
+        "(GET /api/order_bridge/orders, Bearer). Parámetros opcionales: limit, offset "
+        "y filtro por state (p. ej. 'draft', 'sale', 'cancel')."
+    ),
+    mime_type="application/json",
+)
+async def orders_list_resource(
+    limit: int | None = None,
+    offset: int | None = None,
+    state: str | None = None,
+    auth: AuthenticatedOrderBridgeRef = Depends(get_authenticated_order_bridge),
+) -> dict[str, Any]:
+    return await list_orders_page(
+        auth.client,
+        bearer_token=auth.bearer_token,
+        limit=limit,
+        offset=offset,
+        state=state,
+    )
 
 
 @mcp.resource(

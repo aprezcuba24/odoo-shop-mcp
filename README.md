@@ -139,6 +139,7 @@ Más detalle en la documentación de GitHub: [Extender Copilot Chat con servidor
 | `apk://locations/municipalities` | Municipios y barrios (nomencladores) | Público |
 | `apk://session/status` | Estado de validación del dispositivo | Bearer |
 | `apk://session/profile` | Perfil del contacto del dispositivo | Bearer |
+| `apk://orders{?limit,offset,state}` | Listado paginado de pedidos del usuario | Bearer |
 | `apk://orders/{order_id}` | Detalle de pedido con líneas | Bearer |
 
 ### Prompts
