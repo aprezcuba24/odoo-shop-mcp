@@ -17,6 +17,7 @@ from apk_mcp.generated.order_bridge_client.models.profile_patch_body import (
 )
 from apk_mcp.generated.order_bridge_client.models.profile_put_body import ProfilePutBody
 from apk_mcp.generated.order_bridge_client.models.profile_response import ProfileResponse
+from apk_mcp.services.order_bridge.profile_presenters import present_profile
 from apk_mcp.utils.openapi_detailed import bearer_authorization, client_helper, unset_str
 
 
@@ -26,12 +27,13 @@ async def get_profile(
     bearer_token: str,
 ) -> dict[str, Any]:
     async with bearer_authorization(client, bearer_token):
-        return await client_helper(
+        raw = await client_helper(
             order_bridge_profile_get,
             client,
             success_type=ProfileResponse,
             unexpected_shape_message="Unexpected response shape for profile get",
         )
+    return present_profile(raw)
 
 
 async def update_profile(
@@ -54,13 +56,14 @@ async def update_profile(
         )
     body = ProfilePatchBody(name=unset_str(name), address=address)
     async with bearer_authorization(client, bearer_token):
-        return await client_helper(
+        raw = await client_helper(
             order_bridge_profile_patch,
             client,
             success_type=ProfileResponse,
             unexpected_shape_message="Unexpected response shape for profile patch",
             body=body,
         )
+    return present_profile(raw)
 
 
 async def replace_profile(

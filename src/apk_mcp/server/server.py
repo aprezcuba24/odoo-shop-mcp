@@ -36,17 +36,20 @@ tools = [
     "Carrito en memoria (shop-key del cliente): add_to_cart, get_cart, clear_cart",
     "Confirmar pedido desde carrito: checkout_cart",
     "Último pedido del usuario: get_last_order",
+    "Actualizar nombre y dirección del perfil: update_profile",
 ]
 resources = [
     "Categorías de producto: apk://catalog/categories",
     "Detalle de producto: apk://catalog/products/{product_id}",
     "Catálogo de productos: apk://catalog/products{?limit,offset,category_id,search}",
     "Municipios y barrios para dirección: apk://locations/municipalities",
+    "Perfil del usuario (nombre, teléfono, dirección): apk://session/profile",
     "Pedidos del usuario: apk://orders{?limit,offset,state}",
     "Detalle de pedido: apk://orders/{order_id}",
 ]
 prompts = [
     "shop_assistant: flujo guiado — catálogo (resources), carrito y checkout_cart",
+    "update_my_address: ver o actualizar nombre y dirección de entrega del perfil",
 ]
 instructions = (
     "Esto es la tienda de YY-Mercado que permite comprar productos a los clientes.\n"
