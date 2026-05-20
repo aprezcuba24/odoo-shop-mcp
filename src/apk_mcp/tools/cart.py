@@ -10,7 +10,6 @@ from apk_mcp.services.cart import CartLine, cart_store, lines_payload
 
 
 def _cart_response(
-    client_key: str,
     lines: list[CartLine],
     *,
     message: str | None = None,
@@ -19,10 +18,9 @@ def _cart_response(
         (0, 0.0) if not lines else (len(lines), sum(line.qty for line in lines))
     )
     payload: dict[str, Any] = {
-        "client_key": client_key,
-        "lines": lines_payload(lines),
         "line_count": line_count,
         "total_qty": total_qty,
+        "_agent": {"lines": lines_payload(lines)},
     }
     if message is not None:
         payload["message"] = message
@@ -35,7 +33,7 @@ def _cart_response(
         "Añade o actualiza un producto en el carrito en memoria del servidor MCP. "
         "El carrito se identifica con la cabecera HTTP shop-key del cliente (Bearer del dispositivo). "
         "Parámetros: product_id y quantity (> 0). Si el producto ya está en el carrito, suma la cantidad. "
-        "Devuelve el carrito completo actualizado."
+        "Devuelve line_count, total_qty y _agent.lines (product_id, qty) para uso interno del agente."
     ),
 )
 async def add_to_cart(
@@ -48,24 +46,20 @@ async def add_to_cart(
         product_id=product_id,
         quantity=quantity,
     )
-    return _cart_response(
-        client_key,
-        lines,
-        message="Producto añadido al carrito.",
-    )
+    return _cart_response(lines, message="Producto añadido al carrito.")
 
 
 @mcp.tool(
     name="get_cart",
     description=(
         "Obtiene el carrito en memoria del dispositivo actual (cabecera HTTP shop-key). "
-        "Devuelve client_key (valor de shop-key), líneas (product_id, qty), line_count y total_qty."
+        "Devuelve line_count, total_qty y _agent.lines (product_id, qty)."
     ),
 )
 async def get_cart() -> dict[str, Any]:
     client_key = resolve_shop_key()
     lines = await cart_store.get_lines(client_key)
-    return _cart_response(client_key, lines)
+    return _cart_response(lines)
 
 
 @mcp.tool(
@@ -78,8 +72,4 @@ async def get_cart() -> dict[str, Any]:
 async def clear_cart() -> dict[str, Any]:
     client_key = resolve_shop_key()
     await cart_store.clear(client_key)
-    return _cart_response(
-        client_key,
-        [],
-        message="Carrito vaciado.",
-    )
+    return _cart_response([], message="Carrito vaciado.")

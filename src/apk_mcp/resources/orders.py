@@ -18,9 +18,8 @@ from apk_mcp.services.order_bridge.orders import get_order_detail, list_orders_p
     uri="apk://orders{?limit,offset,state}",
     name="Pedidos del usuario",
     description=(
-        "Listado paginado de pedidos de venta del contacto de este dispositivo "
-        "(GET /api/order_bridge/orders, Bearer). Parámetros opcionales: limit, offset "
-        "y filtro por state (p. ej. 'draft', 'sale', 'cancel')."
+        "Listado paginado de pedidos (GET /api/order_bridge/orders, Bearer). "
+        "Cada ítem: order_number, status (español), importes; _agent con order_id (uso interno del agente)."
     ),
     mime_type="application/json",
 )
@@ -43,8 +42,8 @@ async def orders_list_resource(
     uri="apk://orders/{order_id}",
     name="Pedido",
     description=(
-        "Detalle completo de un pedido de venta por ID (Bearer): "
-        "líneas, importes, dirección de entrega, estado de entrega y store_state."
+        "Detalle de pedido por ID (Bearer): líneas, importes, dirección y status en español; "
+        "_agent con order_id y product_id por línea (no mostrar al usuario final)."
     ),
     mime_type="application/json",
 )

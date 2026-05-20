@@ -51,10 +51,9 @@ def test_checkout_cart_success_clears_cart() -> None:
                 "apk_mcp.tools.orders.create_order",
                 new_callable=AsyncMock,
                 return_value={
-                    "id": 101,
-                    "name": "S00101",
-                    "state": "draft",
-                    "store_state": "reviewing",
+                    "order_number": "S00101",
+                    "status": "En revisión",
+                    "_agent": {"order_id": 101, "store_state": "reviewing"},
                 },
             ) as mock_create,
         ):
@@ -63,9 +62,10 @@ def test_checkout_cart_success_clears_cart() -> None:
             result = await orders_tools.checkout_cart(auth=_auth_stub())
 
         assert result["ok"] is True
-        assert result["order"]["id"] == 101
+        assert result["order"]["order_number"] == "S00101"
+        assert result["order"]["_agent"]["order_id"] == 101
         assert result["cart_cleared"] is True
-        assert result["lines_submitted"] == [{"product_id": 5, "qty": 2.0}]
+        assert "lines_submitted" not in result
         mock_create.assert_awaited_once()
         assert await store.get_lines("Bearer test-key") == []
 
@@ -103,8 +103,9 @@ def test_checkout_cart_insufficient_stock_keeps_cart() -> None:
 
         assert result["ok"] is False
         assert result["error"] == "insufficient_stock"
-        assert result["products"] == [{"product_id": 5, "available_qty": 1.0}]
-        assert result["lines_submitted"] == [{"product_id": 5, "qty": 2.0}]
+        assert result["products"] == [{"available_qty": 1.0}]
+        assert result["_agent"]["products"] == [{"product_id": 5, "available_qty": 1.0}]
+        assert result["_agent"]["lines_submitted"] == [{"product_id": 5, "qty": 2.0}]
         lines = await store.get_lines("Bearer test-key")
         assert len(lines) == 1
         assert lines[0].qty == 2.0

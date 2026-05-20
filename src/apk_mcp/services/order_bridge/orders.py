@@ -30,6 +30,12 @@ from apk_mcp.generated.order_bridge_client.models.orders_page_response import (
 from apk_mcp.generated.order_bridge_client.models.sale_order_detail_response import (
     SaleOrderDetailResponse,
 )
+from apk_mcp.services.order_bridge.order_presenters import (
+    present_order_cancelled,
+    present_order_created,
+    present_order_detail,
+    present_orders_page,
+)
 from apk_mcp.utils.exceptions import InsufficientStockError, NotFoundError
 from apk_mcp.utils.openapi_detailed import (
     bearer_authorization,
@@ -55,7 +61,7 @@ async def list_orders_page(
     state: str | None = None,
 ) -> dict[str, Any]:
     async with bearer_authorization(client, bearer_token):
-        return await client_helper(
+        raw = await client_helper(
             order_bridge_orders_list,
             client,
             success_type=OrdersPageResponse,
@@ -64,6 +70,7 @@ async def list_orders_page(
             offset=unset_int(offset),
             state=unset_str(state),
         )
+    return present_orders_page(raw)
 
 
 async def get_last_order(
@@ -71,20 +78,23 @@ async def get_last_order(
     *,
     bearer_token: str,
 ) -> dict[str, Any]:
-    page = await list_orders_page(
-        client,
-        bearer_token=bearer_token,
-        limit=1,
-        offset=0,
-    )
-    items = page.get("items") or []
-    if not items:
+    async with bearer_authorization(client, bearer_token):
+        raw_page = await client_helper(
+            order_bridge_orders_list,
+            client,
+            success_type=OrdersPageResponse,
+            unexpected_shape_message="Unexpected response shape for orders list",
+            limit=unset_int(1),
+            offset=unset_int(0),
+        )
+    raw_items = raw_page.get("items") or []
+    if not raw_items:
         raise NotFoundError(
             "No hay pedidos para este dispositivo",
             status_code=404,
             body=None,
         )
-    order_id = items[0]["id"]
+    order_id = raw_items[0]["id"]
     return await get_order_detail(
         client,
         bearer_token=bearer_token,
@@ -99,13 +109,14 @@ async def get_order_detail(
     order_id: int,
 ) -> dict[str, Any]:
     async with bearer_authorization(client, bearer_token):
-        return await client_helper(
+        raw = await client_helper(
             order_bridge_order_detail,
             client,
             success_type=SaleOrderDetailResponse,
             unexpected_shape_message="Unexpected response shape for order detail",
             order_id=order_id,
         )
+    return present_order_detail(raw)
 
 
 async def create_order(
@@ -118,7 +129,7 @@ async def create_order(
         lines=[OrderLineIn(product_id=ln["product_id"], qty=ln["qty"]) for ln in lines]
     )
     async with bearer_authorization(client, bearer_token):
-        return await client_helper(
+        raw = await client_helper(
             order_bridge_orders_create,
             client,
             success_type=OrderCreatedResponse,
@@ -126,6 +137,7 @@ async def create_order(
             bad_request_spec=_CREATE_BAD_REQUEST_SPEC,
             body=body,
         )
+    return present_order_created(raw)
 
 
 async def cancel_order(
@@ -135,10 +147,11 @@ async def cancel_order(
     order_id: int,
 ) -> dict[str, Any]:
     async with bearer_authorization(client, bearer_token):
-        return await client_helper(
+        raw = await client_helper(
             order_bridge_order_cancel,
             client,
             success_type=OrderCancelResponse,
             unexpected_shape_message="Unexpected response shape for order cancel",
             order_id=order_id,
         )
+    return present_order_cancelled(raw)

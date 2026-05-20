@@ -21,6 +21,7 @@ from apk_mcp.services.order_bridge.orders import (
     get_order_detail,
     list_orders_page,
 )
+from apk_mcp.services.order_bridge.order_presenters import present_insufficient_stock
 from apk_mcp.utils.exceptions import InsufficientStockError
 
 
@@ -28,8 +29,10 @@ from apk_mcp.utils.exceptions import InsufficientStockError
     name="list_orders",
     description=(
         "Lista pedidos de venta del contacto de este dispositivo (GET /api/order_bridge/orders, Bearer). "
-        "Admite paginación (limit, offset) y filtro opcional por estado "
-        "(p. ej. 'draft', 'sale', 'cancel')."
+        "Admite paginación (limit, offset) y filtro opcional por estado Odoo interno "
+        "(p. ej. 'draft', 'sale', 'cancel'). "
+        "Cada ítem expone order_number, status (español) e importes; referencias internas en _agent "
+        "(order_id, store_state) — no mostrar _agent al usuario final."
     ),
 )
 async def list_orders(
@@ -52,7 +55,8 @@ async def list_orders(
     description=(
         "Obtiene el detalle del pedido más reciente del contacto de este dispositivo "
         "(GET /api/order_bridge/orders?limit=1 y GET /api/order_bridge/orders/{order_id}, Bearer). "
-        "Incluye líneas, importes y estado. Falla si el usuario no tiene pedidos."
+        "Incluye líneas, importes y status en español; _agent con order_id y product_id por línea. "
+        "Falla si el usuario no tiene pedidos."
     ),
 )
 async def get_last_order_tool(
@@ -67,8 +71,9 @@ async def get_last_order_tool(
 @mcp.tool(
     name="get_order",
     description=(
-        "Obtiene el detalle completo de un pedido de venta (líneas, importes, estado de entrega) "
-        "vía GET /api/order_bridge/orders/{order_id} (Bearer)."
+        "Obtiene el detalle completo de un pedido de venta (líneas, importes, dirección) "
+        "vía GET /api/order_bridge/orders/{order_id} (Bearer). "
+        "Respuesta con order_number, status (español) y _agent (order_id, product_id) — no mostrar _agent al usuario."
     ),
 )
 async def get_order(
@@ -87,8 +92,8 @@ async def get_order(
     description=(
         "Crea un pedido de venta nuevo (POST /api/order_bridge/orders, Bearer). "
         "Pasa las líneas como cadena JSON: '[{\"product_id\": 1, \"qty\": 2.0}, ...]'. "
-        "Devuelve el pedido creado con id, name, state y store_state. "
-        "Si alguna línea supera el stock disponible, devuelve error con detalle de productos."
+        "Devuelve order_number, status (español) y _agent.order_id. "
+        "Si alguna línea supera el stock disponible, devuelve InsufficientStockError con productos en el body."
     ),
 )
 async def tool_create_order(
@@ -109,10 +114,10 @@ async def tool_create_order(
         "Confirma el pedido con el carrito en memoria del dispositivo actual "
         "(POST /api/order_bridge/orders, Bearer). Lee las líneas del carrito asociado "
         "a la cabecera HTTP shop-key (add_to_cart / get_cart). Si el pedido se crea "
-        "correctamente, vacía el carrito. Devuelve ok=true con order (id, name, state, "
-        "store_state). Si el carrito está vacío, ok=false y error=empty_cart. "
-        "Si falta stock, ok=false, error=insufficient_stock y products con product_id y "
-        "available_qty para que el usuario ajuste cantidades y reintente."
+        "correctamente, vacía el carrito. Devuelve ok=true con order (order_number, status). "
+        "Si el carrito está vacío, ok=false y error=empty_cart. "
+        "Si falta stock, ok=false, error=insufficient_stock; available_qty visible y product_id en _agent "
+        "para ajustar cantidades con add_to_cart y reintentar."
     ),
 )
 async def checkout_cart(
@@ -140,19 +145,12 @@ async def checkout_cart(
         )
     except InsufficientStockError as exc:
         body = exc.body or {}
-        return {
-            "ok": False,
-            "error": "insufficient_stock",
-            "message": str(exc) or body.get("message", "Stock insuficiente."),
-            "products": body.get("products", []),
-            "lines_submitted": lines_submitted,
-        }
+        return present_insufficient_stock(body, lines_submitted=lines_submitted)
 
     await cart_store.clear(client_key)
     return {
         "ok": True,
         "order": order,
-        "lines_submitted": lines_submitted,
         "cart_cleared": True,
     }
 
@@ -161,7 +159,7 @@ async def checkout_cart(
     name="cancel_order",
     description=(
         "Cancela un pedido en borrador (POST /api/order_bridge/orders/{order_id}/cancel, Bearer). "
-        "Solo se pueden cancelar pedidos en estado 'draft'. Devuelve id y state actualizados."
+        "Solo se pueden cancelar pedidos en borrador. Devuelve status Cancelado y _agent.order_id."
     ),
 )
 async def tool_cancel_order(

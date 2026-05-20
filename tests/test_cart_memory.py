@@ -89,18 +89,18 @@ def test_cart_tools_use_resolve_shop_key() -> None:
             return_value="Bearer test-shop-key",
         ):
             added = await cart_tools.add_to_cart(product_id=5, quantity=2.0)
-            assert added["client_key"] == "Bearer test-shop-key"
-            assert added["lines"] == [{"product_id": 5, "qty": 2.0}]
+            assert "client_key" not in added
+            assert added["_agent"]["lines"] == [{"product_id": 5, "qty": 2.0}]
 
             fetched = await cart_tools.get_cart()
-            assert fetched["client_key"] == "Bearer test-shop-key"
             assert fetched["line_count"] == 1
+            assert fetched["_agent"]["lines"] == [{"product_id": 5, "qty": 2.0}]
 
             cleared = await cart_tools.clear_cart()
-            assert cleared["lines"] == []
+            assert cleared["_agent"]["lines"] == []
             assert cleared["message"] == "Carrito vaciado."
 
             empty = await cart_tools.get_cart()
-            assert empty["lines"] == []
+            assert empty["_agent"]["lines"] == []
 
     asyncio.run(run())
