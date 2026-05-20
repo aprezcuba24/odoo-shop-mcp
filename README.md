@@ -128,6 +128,9 @@ Más detalle en la documentación de GitHub: [Extender Copilot Chat con servidor
 | `replace_profile` | `PUT /profile` | Bearer |
 | `register_push_token` | `POST /push/token` | Bearer |
 | `update_push_topics` | `PATCH /push/topics` | Bearer |
+| `add_to_cart` | Carrito en memoria (clave = cabecera `shop-key`) | `shop-key` |
+| `get_cart` | Consulta carrito en memoria | `shop-key` |
+| `clear_cart` | Vacía carrito en memoria | `shop-key` |
 
 ### Resources
 

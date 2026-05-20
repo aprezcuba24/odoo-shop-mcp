@@ -33,7 +33,7 @@ async def app_lifespan(server: FastMCP):
 
 
 tools = [
-    "Adicionar producto al carrito de compras: add_to_cart",
+    "Carrito en memoria (shop-key del cliente): add_to_cart, get_cart, clear_cart",
     "Último pedido del usuario: get_last_order",
 ]
 resources = [
