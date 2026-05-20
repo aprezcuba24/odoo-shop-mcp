@@ -41,6 +41,7 @@ resources = [
     "Categorías de producto: apk://catalog/categories",
     "Detalle de producto: apk://catalog/products/{product_id}",
     "Catálogo de productos: apk://catalog/products{?limit,offset,category_id,search}",
+    "Municipios y barrios para dirección: apk://locations/municipalities",
     "Pedidos del usuario: apk://orders{?limit,offset,state}",
     "Detalle de pedido: apk://orders/{order_id}",
 ]
