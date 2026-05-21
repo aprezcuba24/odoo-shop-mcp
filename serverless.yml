@@ -1,13 +1,19 @@
 service: apk-mcp
 frameworkVersion: "4"
 
+plugins:
+  - serverless-python-requirements
+
 provider:
   name: aws
   runtime: python3.12
   timeout: 30
   memorySize: 512
+  deploymentBucket:
+    name: apk-mcp-serverless-deployments-us-east-1
   environment:
-    MCP_PATH: /mcp
+    # PYTHONPATH: /var/task/src:/var/task
+    # MCP_PATH: /mcp
     APK_API_TIMEOUT: "30"
     CART_STORE_BACKEND: dynamodb
     DYNAMODB_CART_TABLE: ${self:service}-cart-${sls:stage}
@@ -24,11 +30,8 @@ provider:
 
 functions:
   mcp:
-    handler: apk_mcp.lambda_handler.handler
-    events:
-      - httpApi:
-          path: /mcp
-          method: ANY
+    handler: src/apk_mcp/lambda_handler.handler
+    url: true
 
 resources:
   Resources:
