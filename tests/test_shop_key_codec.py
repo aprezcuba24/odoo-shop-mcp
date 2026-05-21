@@ -1,0 +1,73 @@
+"""Unit tests for shop-key encode/decode."""
+
+from __future__ import annotations
+
+import base64
+
+import pytest
+
+from apk_mcp.utils.exceptions import InvalidShopKeyError
+from apk_mcp.utils.shop_key_codec import (
+    SHOP_KEY_BEARER_PREFIX,
+    decode_shop_key,
+    encode_shop_key,
+    encode_shop_key_from_credentials,
+    parse_credentials,
+)
+
+_TOKEN = "99031c76-d288-41ea-866b-ef656f58e497"
+_BASE = "https://tienda.example.com"
+
+
+def test_encode_decode_roundtrip() -> None:
+    raw = encode_shop_key(_BASE, _TOKEN)
+    assert raw.startswith(SHOP_KEY_BEARER_PREFIX)
+
+    ctx = decode_shop_key(raw)
+    assert ctx.storage_key == raw
+    assert ctx.base_url == _BASE
+    assert ctx.bearer_token == f"Bearer {_TOKEN}"
+
+
+def test_encode_from_credentials() -> None:
+    raw = encode_shop_key_from_credentials(f"{_BASE}|{_TOKEN}")
+    ctx = decode_shop_key(raw)
+    assert ctx.bearer_token == f"Bearer {_TOKEN}"
+
+
+def test_encode_strips_trailing_slash_from_url() -> None:
+    raw = encode_shop_key("http://localhost:8069/", "token")
+    ctx = decode_shop_key(raw)
+    assert ctx.base_url == "http://localhost:8069"
+
+
+def test_decode_requires_bearer_prefix() -> None:
+    b64 = base64.b64encode(f"{_BASE}|{_TOKEN}".encode()).decode()
+    with pytest.raises(InvalidShopKeyError):
+        decode_shop_key(b64)
+
+
+def test_decode_invalid_base64_raises() -> None:
+    with pytest.raises(InvalidShopKeyError):
+        decode_shop_key("Bearer not-valid-base64!!!")
+
+
+def test_parse_credentials_missing_pipe_raises() -> None:
+    with pytest.raises(InvalidShopKeyError):
+        parse_credentials("https://example.com")
+
+
+def test_decode_empty_parts_raises() -> None:
+    payload = base64.b64encode(b"|token").decode()
+    with pytest.raises(InvalidShopKeyError):
+        decode_shop_key(f"Bearer {payload}")
+
+    payload = base64.b64encode(b"https://x.com|").decode()
+    with pytest.raises(InvalidShopKeyError):
+        decode_shop_key(f"Bearer {payload}")
+
+
+def test_different_backends_same_token_different_storage_keys() -> None:
+    key_a = encode_shop_key("https://a.example.com", _TOKEN)
+    key_b = encode_shop_key("https://b.example.com", _TOKEN)
+    assert key_a != key_b

@@ -10,7 +10,7 @@
 
 ```bash
 cd ApkMCP
-cp .env.example .env   # edita APK_API_BASE_URL y el resto
+cp .env.example .env   # edita APK_API_TIMEOUT y bind MCP
 uv sync
 ```
 
@@ -37,7 +37,7 @@ Por defecto escucha en `http://0.0.0.0:8000/mcp` (ajustable con `MCP_HOST`, `MCP
 ## Despliegue (idea general)
 
 1. Clonar/copiar el repo en el servidor o construir una imagen que ejecute `uv sync` (o `uv sync --frozen` si versionas `uv.lock`).
-2. Variables de entorno o `.env` con `APK_API_BASE_URL`, credenciales si las hubiera, y bind MCP.
+2. Variables de entorno o `.env` con bind MCP (`MCP_HOST`, `MCP_PORT`, `MCP_PATH`). El backend Odoo va en `shop-key` (`Bearer` + base64 `URL|user_token`).
 3. Proceso bajo systemd, Docker o PaaS ejecutando `uv run apk-mcp` (o el binario equivalente en tu imagen).
 4. Exponer **HTTPS** hacia el endpoint `/mcp` si el cliente es remoto (p. ej. ChatGPT).
 

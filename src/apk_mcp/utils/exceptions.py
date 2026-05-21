@@ -13,6 +13,10 @@ class MissingShopKeyError(ApkMcpError):
     """MCP request did not carry a valid shop-key header."""
 
 
+class InvalidShopKeyError(MissingShopKeyError):
+    """shop-key header present but not valid Bearer base64(BASE_URL|user_token)."""
+
+
 class ApkApiError(ApkMcpError):
     """REST API returned an error response."""
 

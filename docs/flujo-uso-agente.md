@@ -237,7 +237,7 @@ Las rutas de catálogo, banners, configuración de tienda, municipios y registro
 Antes de conectar un agente a este MCP, verifica lo siguiente:
 
 1. El servidor MCP está desplegado y accesible (HTTPS si el cliente es remoto).
-2. `APK_API_BASE_URL` apunta a la instancia Odoo con el módulo `order_bridge` activo.
+2. La cabecera `shop-key` incluye la URL del backend Odoo (`Bearer` + base64 `URL|user_token`) con el módulo `order_bridge` activo.
 3. La URL del endpoint MCP (`/mcp`) está configurada en el host del agente.
 4. Si el agente necesita rutas Bearer: el dispositivo del **tenant actual** (cabecera MCP) está registrado y validado en Odoo.
 5. El system prompt del agente menciona que debe usar los **prompts MCP** para flujos multi-paso (`place_order`, `find_products`, etc.) en lugar de reinventar la orquestación.

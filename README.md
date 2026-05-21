@@ -29,7 +29,6 @@ Copia `.env.example` a `.env` y ajusta:
 
 | Variable | Descripción |
 |----------|-------------|
-| `APK_API_BASE_URL` | URL base del host (ej. `https://mi-odoo.com`) |
 | `APK_API_TIMEOUT` | Timeout HTTP en segundos |
 | `MCP_HOST` / `MCP_PORT` / `MCP_PATH` | Bind y ruta del endpoint MCP (p. ej. `/mcp`) |
 
@@ -37,13 +36,16 @@ Copia `.env.example` a `.env` y ajusta:
 
 La API Tienda Apk usa `Authorization: Bearer <token>` salvo rutas públicas (catálogo, `POST /register`, etc.).
 
-Cada petición HTTP al endpoint MCP Streamable HTTP debe incluir la cabecera **`shop-key`** con el token del dispositivo/tienda, por ejemplo:
+Cada petición HTTP al endpoint MCP debe incluir la cabecera **`shop-key`**: `Bearer` + `base64(BASE_URL|user_token)` (misma forma en desarrollo y producción).
 
-```
-shop-key: Bearer 99031c76-d288-41ea-866b-ef656f58e497
+Generar el valor en local:
+
+```bash
+pnpm shop-key -- http://localhost:8069|99031c76-d288-41ea-866b-ef656f58e497
+# → Bearer aHR0cDovL2xvY2FsaG9zdDo4MDY5fDk5MDMxYzc2L...
 ```
 
-El servidor MCP extrae el token y lo reenvía al backend como `Authorization: Bearer <token>`. El mismo valor se usa como `device_key` en `POST /register`.
+El servidor decodifica URL y token, enruta al backend indicado y reenvía `Authorization: Bearer <user_token>`.
 
 Si Tienda Apk exige que el dispositivo esté registrado en Odoo, un **401** puede indicar que el token aún no está vinculado o aprobado en la API, no un fallo local de “falta token”.
 
@@ -74,8 +76,8 @@ También puedes ejecutar por separado `pnpm run mcp:server` y `pnpm run inspecto
 ## Uso con ChatGPT / Cursor
 
 1. Despliega este servidor en una URL HTTPS accesible (o túnel tipo Cloudflare Tunnel / ngrok).
-2. En el cliente, añade un servidor MCP remoto con la URL `https://tu-host/mcp`. Si tu host MCP permite cabeceras personalizadas, configura **`shop-key`** con el Bearer token de la tienda/dispositivo.
-3. Configura `APK_API_BASE_URL` apuntando a tu instancia con el módulo **order_bridge**.
+2. En el cliente, añade un servidor MCP remoto con la URL `https://tu-host/mcp` y la cabecera **`shop-key`** (`Bearer` + base64 de `URL|user_token`).
+3. Genera el `shop-key` con `pnpm shop-key -- https://tu-odoo.com|<user_token>`.
 
 ## VS Code y GitHub Copilot (agentes / Chat)
 
@@ -85,7 +87,7 @@ Este servidor expone **Streamable HTTP**; en VS Code se declara como servidor MC
 2. Abre la configuración MCP del **workspace** o del **usuario**:
    - Paleta de comandos: **“MCP: Open Workspace Folder MCP Configuration”** → crea o edita [`.vscode/mcp.json`](https://code.visualstudio.com/docs/copilot/customization/mcp-servers), o
    - **“MCP: Open User Configuration”** si quieres el mismo servidor en todos los proyectos.
-3. Añade una entrada en `servers` con la URL que incluya el path (`/mcp` por defecto). Incluye la cabecera `shop-key` con el token Bearer:
+3. Añade una entrada en `servers` con la URL del MCP (`/mcp` por defecto) y `shop-key` generado con `pnpm shop-key -- <backend-odoo>|<user_token>`:
 
 ```json
 {
@@ -94,7 +96,7 @@ Este servidor expone **Streamable HTTP**; en VS Code se declara como servidor MC
       "type": "http",
       "url": "http://127.0.0.1:7000/mcp",
       "headers": {
-        "shop-key": "Bearer 99031c76-d288-41ea-866b-ef656f58e497"
+        "shop-key": "<salida de pnpm shop-key>"
       }
     }
   }

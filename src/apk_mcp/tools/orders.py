@@ -12,7 +12,7 @@ from apk_mcp.server import (
     get_authenticated_order_bridge,
     mcp,
 )
-from apk_mcp.server.app_state import resolve_shop_key
+from apk_mcp.utils.shop_key_codec import resolve_shop_key
 from apk_mcp.services.cart import cart_store, lines_payload
 from apk_mcp.services.order_bridge.orders import (
     cancel_order,

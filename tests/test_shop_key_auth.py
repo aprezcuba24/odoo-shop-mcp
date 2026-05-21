@@ -3,16 +3,23 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from apk_mcp.server.app_state import get_authenticated_order_bridge, resolve_shop_key
+from apk_mcp.server.app_state import get_authenticated_order_bridge
+from apk_mcp.utils.shop_key_codec import resolve_shop_context, resolve_shop_key
 from apk_mcp.server import app_state as app_state_module
-from apk_mcp.utils.exceptions import MissingShopKeyError
+from apk_mcp.utils.exceptions import InvalidShopKeyError, MissingShopKeyError
+from apk_mcp.utils.shop_key_codec import encode_shop_key
+
+_BASE = "http://localhost:8069"
+_USER_TOKEN = "99031c76-d288-41ea-866b-ef656f58e497"
+_BEARER = f"Bearer {_USER_TOKEN}"
+_ENCODED = encode_shop_key(_BASE, _USER_TOKEN)
 
 
-def test_resolve_shop_key_from_header() -> None:
+def _request_with_shop_key(encoded: str):
     from starlette.requests import Request
 
     scope = {
@@ -24,13 +31,27 @@ def test_resolve_shop_key_from_header() -> None:
         "path": "/mcp",
         "raw_path": b"/mcp",
         "query_string": b"",
-        "headers": [(b"shop-key", b"Bearer 99031c76-d288-41ea-866b-ef656f58e497")],
+        "headers": [(b"shop-key", encoded.encode())],
         "client": None,
         "server": ("127.0.0.1", 8000),
     }
-    req = Request(scope)
-    with patch("apk_mcp.server.app_state.get_http_request", return_value=req):
-        assert resolve_shop_key() == "Bearer 99031c76-d288-41ea-866b-ef656f58e497"
+    return Request(scope)
+
+
+def test_resolve_shop_context_from_header() -> None:
+    req = _request_with_shop_key(_ENCODED)
+    with patch("apk_mcp.utils.shop_key_codec.get_http_request", return_value=req):
+        ctx = resolve_shop_context()
+
+    assert ctx.storage_key == _ENCODED
+    assert ctx.base_url == _BASE
+    assert ctx.bearer_token == _BEARER
+
+
+def test_resolve_shop_key_returns_raw_base64() -> None:
+    req = _request_with_shop_key(_ENCODED)
+    with patch("apk_mcp.utils.shop_key_codec.get_http_request", return_value=req):
+        assert resolve_shop_key() == _ENCODED
 
 
 def test_resolve_shop_key_missing_raises() -> None:
@@ -50,63 +71,58 @@ def test_resolve_shop_key_missing_raises() -> None:
         "server": ("127.0.0.1", 8000),
     }
     req = Request(scope)
-    with patch("apk_mcp.server.app_state.get_http_request", return_value=req):
+    with patch("apk_mcp.utils.shop_key_codec.get_http_request", return_value=req):
         with pytest.raises(MissingShopKeyError):
             resolve_shop_key()
 
 
+def test_resolve_shop_key_invalid_base64_raises() -> None:
+    req = _request_with_shop_key("Bearer not-valid!!!")
+    with patch("apk_mcp.utils.shop_key_codec.get_http_request", return_value=req):
+        with pytest.raises(InvalidShopKeyError):
+            resolve_shop_context()
+
+
 def test_resolve_shop_key_no_http_context_raises() -> None:
     with patch(
-        "apk_mcp.server.app_state.get_http_request",
+        "apk_mcp.utils.shop_key_codec.get_http_request",
         side_effect=RuntimeError("No active HTTP request found."),
     ):
         with pytest.raises(MissingShopKeyError):
             resolve_shop_key()
 
 
-def test_get_authenticated_order_bridge_uses_shop_key_header() -> None:
-    from starlette.requests import Request
-
+def test_get_authenticated_order_bridge_uses_decoded_token_and_registry() -> None:
     async def run() -> None:
         mock_client = MagicMock()
-        app_state_module.app_state.api = mock_client
+        registry = MagicMock()
+        registry.get_client = AsyncMock(return_value=mock_client)
+        app_state_module.app_state.registry = registry
         try:
-            scope = {
-                "type": "http",
-                "asgi": {"spec_version": "2.1", "version": "3.0"},
-                "http_version": "1.1",
-                "method": "POST",
-                "scheme": "http",
-                "path": "/mcp",
-                "raw_path": b"/mcp",
-                "query_string": b"",
-                "headers": [(b"shop-key", b"Bearer client-supplied-token")],
-                "client": None,
-                "server": ("127.0.0.1", 8000),
-            }
-            req = Request(scope)
-            with patch("apk_mcp.server.app_state.get_http_request", return_value=req):
+            req = _request_with_shop_key(_ENCODED)
+            with patch("apk_mcp.utils.shop_key_codec.get_http_request", return_value=req):
                 ref = await get_authenticated_order_bridge()
+
+            registry.get_client.assert_awaited_once_with(_BASE)
             assert ref.client is mock_client
-            assert ref.bearer_token == "Bearer client-supplied-token"
+            assert ref.bearer_token == _BEARER
         finally:
-            app_state_module.app_state.api = None
+            app_state_module.app_state.registry = None
 
     asyncio.run(run())
 
 
 def test_get_authenticated_order_bridge_no_http_context_raises() -> None:
     async def run() -> None:
-        mock_client = MagicMock()
-        app_state_module.app_state.api = mock_client
+        app_state_module.app_state.registry = MagicMock()
         try:
             with patch(
-                "apk_mcp.server.app_state.get_http_request",
+                "apk_mcp.utils.shop_key_codec.get_http_request",
                 side_effect=RuntimeError("No active HTTP request found."),
             ):
                 with pytest.raises(MissingShopKeyError):
                     await get_authenticated_order_bridge()
         finally:
-            app_state_module.app_state.api = None
+            app_state_module.app_state.registry = None
 
     asyncio.run(run())

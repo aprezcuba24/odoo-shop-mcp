@@ -13,10 +13,6 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    apk_api_base_url: str = Field(
-        default="http://localhost:8069",
-        description="Base URL of the Odoo / API host (no trailing path).",
-    )
     apk_api_timeout: float = Field(default=30.0, ge=1.0)
     mcp_host: str = Field(default="0.0.0.0")
     mcp_port: int = Field(default=7000, ge=1, le=65535)

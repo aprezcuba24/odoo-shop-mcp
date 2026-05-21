@@ -22,7 +22,7 @@ description: >-
 
 ## Autenticación (`shop-key`, Streamable HTTP)
 
-Cada petición HTTP al MCP debe incluir la cabecera **`shop-key`** con el token del dispositivo/tienda (p. ej. `Bearer 99031c76-d288-41ea-866b-ef656f58e497`). [`resolve_shop_key`](src/apk_mcp/server/app_state.py) la lee con `get_http_request()` de FastMCP, extrae el token y lo reenvía al backend como `Authorization: Bearer <token>`.
+Cada petición HTTP al MCP debe incluir la cabecera **`shop-key`**: `Bearer` + base64(`BASE_URL|user_token`). [`resolve_shop_context`](src/apk_mcp/utils/shop_key_codec.py) decodifica URL y token; [`resolve_shop_key`](src/apk_mcp/utils/shop_key_codec.py) devuelve el header completo como clave de carrito. Dev: `pnpm shop-key -- http://localhost:8069|<user_token>`.
 
 Tools and resources stay thin; services own endpoint selection, `UNSET` optional args, and success/error typing.
 

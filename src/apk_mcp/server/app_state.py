@@ -2,31 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 
-from fastmcp.server.dependencies import get_http_request
+import httpx
 
 from apk_mcp.generated.order_bridge_client import Client
-from apk_mcp.utils.exceptions import MissingShopKeyError
-
-SHOP_KEY_HEADER = "shop-key"
-
-
-def resolve_shop_key() -> str:
-    """Read shop-key header from the current HTTP request (passthrough value)."""
-    try:
-        request = get_http_request()
-    except RuntimeError as exc:
-        raise MissingShopKeyError(
-            "No HTTP request context; cannot resolve shop-key. "
-            "Use Streamable HTTP with the shop-key header."
-        ) from exc
-
-    raw = request.headers.get(SHOP_KEY_HEADER)
-    if raw:
-        return raw
-
-    raise MissingShopKeyError(f"Missing required HTTP header {SHOP_KEY_HEADER!r}.")
+from apk_mcp.utils.shop_key_codec import resolve_shop_context
 
 
 @dataclass(frozen=True, slots=True)
@@ -44,31 +26,71 @@ class OrderBridgeClientRef:
 
 @dataclass(frozen=True, slots=True)
 class AuthenticatedOrderBridgeRef:
-    """Same lifespan ``Client`` plus Bearer token (see ``bearer_authorization``)."""
+    """Per-request ``Client`` for the decoded backend plus Bearer token."""
 
     client: Client
     bearer_token: str
 
 
+class ClientRegistry:
+    """Lazy pool of order_bridge clients keyed by backend base URL."""
+
+    __slots__ = ("_clients", "_lock", "_timeout")
+
+    def __init__(self, *, timeout: float) -> None:
+        self._timeout = timeout
+        self._lock = asyncio.Lock()
+        self._clients: dict[str, tuple[Client, httpx.AsyncClient]] = {}
+
+    async def get_client(self, base_url: str) -> Client:
+        key = base_url.rstrip("/")
+        async with self._lock:
+            entry = self._clients.get(key)
+            if entry is not None:
+                return entry[0]
+
+            http = httpx.AsyncClient(base_url=key, timeout=self._timeout)
+            ob_client = Client(
+                base_url=key,
+                raise_on_unexpected_status=False,
+                timeout=self._timeout,
+            )
+            ob_client.set_async_httpx_client(http)
+            self._clients[key] = (ob_client, http)
+            return ob_client
+
+    async def close_all(self) -> None:
+        async with self._lock:
+            entries = list(self._clients.values())
+            self._clients.clear()
+
+        for _ob_client, http in entries:
+            await http.aclose()
+
+
 class AppState:
-    __slots__ = ("api",)
+    __slots__ = ("registry",)
 
     def __init__(self) -> None:
-        self.api: Client | None = None
+        self.registry: ClientRegistry | None = None
 
 
 app_state = AppState()
 
 
-def get_apk_api() -> OrderBridgeClientRef:
-    api = app_state.api
-    if api is None:
+async def get_apk_api() -> OrderBridgeClientRef:
+    registry = app_state.registry
+    if registry is None:
         raise RuntimeError("API client not initialized; server lifespan did not start.")
-    return OrderBridgeClientRef(api)
+    ctx = resolve_shop_context()
+    client = await registry.get_client(ctx.base_url)
+    return OrderBridgeClientRef(client)
 
 
 async def get_authenticated_order_bridge() -> AuthenticatedOrderBridgeRef:
-    api = app_state.api
-    if api is None:
+    registry = app_state.registry
+    if registry is None:
         raise RuntimeError("API client not initialized; server lifespan did not start.")
-    return AuthenticatedOrderBridgeRef(client=api, bearer_token=resolve_shop_key())
+    ctx = resolve_shop_context()
+    client = await registry.get_client(ctx.base_url)
+    return AuthenticatedOrderBridgeRef(client=client, bearer_token=ctx.bearer_token)

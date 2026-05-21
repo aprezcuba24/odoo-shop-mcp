@@ -18,7 +18,7 @@ Servidor **MCP** (FastMCP, transporte **Streamable HTTP**) que expone *tools* al
 ## Flujo resumido
 
 1. El cliente abre sesión MCP sobre HTTP (`/mcp`).
-2. El lifespan crea `httpx.AsyncClient` con `APK_API_BASE_URL` y un [`InMemoryTenantCredentialStore`](src/apk_mcp/utils/tenant_credentials.py).
+2. El lifespan crea un [`ClientRegistry`](src/apk_mcp/server/app_state.py) (pool lazy de `httpx.AsyncClient` por URL de backend decodificada del `shop-key`).
 3. Cada petición HTTP al MCP lleva (según configuración) una cabecera de tenant; [`resolve_tenant_id`](src/apk_mcp/server/tenant_resolution.py) la lee vía [`get_http_request`](https://gofastmcp.com) de FastMCP.
 4. Un tool (p. ej. `list_products`) usa `app_state.api` → `GET /api/order_bridge/products` (público).
 5. Rutas Bearer llaman a `ensure_device_token(tenant_id)` para el tenant actual y aplican `bearer_authorization` al cliente generado.

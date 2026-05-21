@@ -57,7 +57,7 @@ Con **`uv`** instalado, el script ejecuta `uv sync` y los generadores con `uv ru
 
 El cliente generado concatena rutas relativas del OpenAPI (por ejemplo `/api/order_bridge/products`) con la **`base_url`** que pases al constructor.
 
-Debe coincidir con el origen de la API Odoo **sin** path extra de módulo; suele ser el mismo valor que `APK_API_BASE_URL` en la configuración de apk-mcp (por ejemplo `http://localhost:8069`).
+Debe coincidir con el origen de la API Odoo **sin** path extra de módulo (por ejemplo `http://localhost:8069`); es la URL que se codifica en la cabecera `shop-key`.
 
 ### Importaciones
 

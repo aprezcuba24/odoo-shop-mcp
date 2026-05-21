@@ -8,13 +8,17 @@ from unittest.mock import patch
 import pytest
 
 from apk_mcp.services.cart.memory import InMemoryCartStore
+from apk_mcp.utils.shop_key_codec import encode_shop_key
+
+_KEY_A = encode_shop_key("https://a.example.com", "token-a")
+_KEY_B = encode_shop_key("https://b.example.com", "token-b")
 
 
 def test_add_line_accumulates_qty() -> None:
     async def run() -> None:
         store = InMemoryCartStore()
-        await store.add_line("Bearer token-a", product_id=3, quantity=1.0)
-        lines = await store.add_line("Bearer token-a", product_id=3, quantity=2.0)
+        await store.add_line(_KEY_A, product_id=3, quantity=1.0)
+        lines = await store.add_line(_KEY_A, product_id=3, quantity=2.0)
 
         assert len(lines) == 1
         assert lines[0].product_id == 3
@@ -34,10 +38,10 @@ def test_get_cart_empty() -> None:
 def test_get_cart_with_lines() -> None:
     async def run() -> None:
         store = InMemoryCartStore()
-        await store.add_line("Bearer token-a", product_id=1, quantity=2.0)
-        await store.add_line("Bearer token-a", product_id=4, quantity=1.0)
+        await store.add_line(_KEY_A, product_id=1, quantity=2.0)
+        await store.add_line(_KEY_A, product_id=4, quantity=1.0)
 
-        lines = await store.get_lines("Bearer token-a")
+        lines = await store.get_lines(_KEY_A)
         assert [(line.product_id, line.qty) for line in lines] == [(1, 2.0), (4, 1.0)]
 
     asyncio.run(run())
@@ -46,12 +50,12 @@ def test_get_cart_with_lines() -> None:
 def test_clear_cart_idempotent() -> None:
     async def run() -> None:
         store = InMemoryCartStore()
-        await store.add_line("Bearer token-a", product_id=1, quantity=1.0)
-        await store.clear("Bearer token-a")
-        assert await store.get_lines("Bearer token-a") == []
+        await store.add_line(_KEY_A, product_id=1, quantity=1.0)
+        await store.clear(_KEY_A)
+        assert await store.get_lines(_KEY_A) == []
 
-        await store.clear("Bearer token-a")
-        assert await store.get_lines("Bearer token-a") == []
+        await store.clear(_KEY_A)
+        assert await store.get_lines(_KEY_A) == []
 
     asyncio.run(run())
 
@@ -59,11 +63,11 @@ def test_clear_cart_idempotent() -> None:
 def test_separate_shop_keys() -> None:
     async def run() -> None:
         store = InMemoryCartStore()
-        await store.add_line("Bearer token-a", product_id=1, quantity=1.0)
-        await store.add_line("Bearer token-b", product_id=2, quantity=3.0)
+        await store.add_line(_KEY_A, product_id=1, quantity=1.0)
+        await store.add_line(_KEY_B, product_id=2, quantity=3.0)
 
-        lines_a = await store.get_lines("Bearer token-a")
-        lines_b = await store.get_lines("Bearer token-b")
+        lines_a = await store.get_lines(_KEY_A)
+        lines_b = await store.get_lines(_KEY_B)
 
         assert [(line.product_id, line.qty) for line in lines_a] == [(1, 1.0)]
         assert [(line.product_id, line.qty) for line in lines_b] == [(2, 3.0)]
@@ -75,7 +79,7 @@ def test_add_line_rejects_non_positive_quantity() -> None:
     async def run() -> None:
         store = InMemoryCartStore()
         with pytest.raises(ValueError, match="quantity"):
-            await store.add_line("Bearer token-a", product_id=1, quantity=0.0)
+            await store.add_line(_KEY_A, product_id=1, quantity=0.0)
 
     asyncio.run(run())
 
@@ -86,7 +90,7 @@ def test_cart_tools_use_resolve_shop_key() -> None:
     async def run() -> None:
         with patch(
             "apk_mcp.tools.cart.resolve_shop_key",
-            return_value="Bearer test-shop-key",
+            return_value=encode_shop_key("http://localhost:8069", "test-shop-key"),
         ):
             added = await cart_tools.add_to_cart(product_id=5, quantity=2.0)
             assert "client_key" not in added

@@ -7,7 +7,6 @@ provider:
   timeout: 30
   memorySize: 512
   environment:
-    APK_API_BASE_URL: ${env:APK_API_BASE_URL}
     MCP_PATH: /mcp
     APK_API_TIMEOUT: "30"
 

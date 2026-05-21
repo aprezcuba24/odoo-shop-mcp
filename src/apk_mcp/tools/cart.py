@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from apk_mcp.server import mcp
-from apk_mcp.server.app_state import resolve_shop_key
+from apk_mcp.utils.shop_key_codec import resolve_shop_key
 from apk_mcp.services.cart import CartLine, cart_store, lines_payload
 
 

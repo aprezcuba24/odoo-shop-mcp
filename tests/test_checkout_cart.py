@@ -7,6 +7,9 @@ from unittest.mock import AsyncMock, patch
 
 from apk_mcp.services.cart.memory import InMemoryCartStore
 from apk_mcp.utils.exceptions import InsufficientStockError
+from apk_mcp.utils.shop_key_codec import encode_shop_key
+
+_STORAGE_KEY = encode_shop_key("http://localhost:8069", "test-key")
 
 
 def _auth_stub(*, bearer_token: str = "Bearer test-key") -> object:
@@ -20,7 +23,7 @@ def test_checkout_cart_empty() -> None:
         with (
             patch(
                 "apk_mcp.tools.orders.resolve_shop_key",
-                return_value="Bearer test-key",
+                return_value=_STORAGE_KEY,
             ),
             patch(
                 "apk_mcp.tools.orders.create_order",
@@ -44,7 +47,7 @@ def test_checkout_cart_success_clears_cart() -> None:
         with (
             patch(
                 "apk_mcp.tools.orders.resolve_shop_key",
-                return_value="Bearer test-key",
+                return_value=_STORAGE_KEY,
             ),
             patch("apk_mcp.tools.orders.cart_store", store),
             patch(
@@ -57,7 +60,7 @@ def test_checkout_cart_success_clears_cart() -> None:
                 },
             ) as mock_create,
         ):
-            await store.add_line("Bearer test-key", product_id=5, quantity=2.0)
+            await store.add_line(_STORAGE_KEY, product_id=5, quantity=2.0)
 
             result = await orders_tools.checkout_cart(auth=_auth_stub())
 
@@ -67,7 +70,7 @@ def test_checkout_cart_success_clears_cart() -> None:
         assert result["cart_cleared"] is True
         assert "lines_submitted" not in result
         mock_create.assert_awaited_once()
-        assert await store.get_lines("Bearer test-key") == []
+        assert await store.get_lines(_STORAGE_KEY) == []
 
     asyncio.run(run())
 
@@ -80,7 +83,7 @@ def test_checkout_cart_insufficient_stock_keeps_cart() -> None:
         with (
             patch(
                 "apk_mcp.tools.orders.resolve_shop_key",
-                return_value="Bearer test-key",
+                return_value=_STORAGE_KEY,
             ),
             patch("apk_mcp.tools.orders.cart_store", store),
             patch(
@@ -97,7 +100,7 @@ def test_checkout_cart_insufficient_stock_keeps_cart() -> None:
                 ),
             ),
         ):
-            await store.add_line("Bearer test-key", product_id=5, quantity=2.0)
+            await store.add_line(_STORAGE_KEY, product_id=5, quantity=2.0)
 
             result = await orders_tools.checkout_cart(auth=_auth_stub())
 
@@ -106,7 +109,7 @@ def test_checkout_cart_insufficient_stock_keeps_cart() -> None:
         assert result["products"] == [{"available_qty": 1.0}]
         assert result["_agent"]["products"] == [{"product_id": 5, "available_qty": 1.0}]
         assert result["_agent"]["lines_submitted"] == [{"product_id": 5, "qty": 2.0}]
-        lines = await store.get_lines("Bearer test-key")
+        lines = await store.get_lines(_STORAGE_KEY)
         assert len(lines) == 1
         assert lines[0].qty == 2.0
 

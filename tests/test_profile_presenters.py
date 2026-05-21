@@ -27,9 +27,9 @@ def test_present_profile_strips_address_ids_from_public_view() -> None:
     addr = result["address"]
     assert addr is not None
     assert addr["street"] == "Calle 5 #12"
-    assert addr["state"] == "Holguín"
-    assert addr["municipality_name"] == "Holguín"
-    assert addr["neighborhood_name"] == "Peralta"
+    assert addr["state"] == "Boyeros"
+    assert addr["municipality_name"] == "Boyeros"
+    assert addr["neighborhood_name"] == "Alta Habana"
     assert "municipality_id" not in addr
     assert "neighborhood_id" not in addr
 

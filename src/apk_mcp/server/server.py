@@ -2,34 +2,23 @@
 
 from __future__ import annotations
 
-import httpx
 from fastmcp import FastMCP
 from fastmcp.server.lifespan import lifespan
 
 from apk_mcp.config import get_settings
-from apk_mcp.generated.order_bridge_client import Client
-from .app_state import app_state
+from .app_state import ClientRegistry, app_state
 
 
 @lifespan
 async def app_lifespan(server: FastMCP):
     settings = get_settings()
-    base = settings.apk_api_base_url.rstrip("/")
-    async with httpx.AsyncClient(
-        base_url=base,
-        timeout=settings.apk_api_timeout,
-    ) as http:
-        ob_client = Client(
-            base_url=base,
-            raise_on_unexpected_status=False,
-            timeout=settings.apk_api_timeout,
-        )
-        ob_client.set_async_httpx_client(http)
-        app_state.api = ob_client
-        try:
-            yield {"settings": settings}
-        finally:
-            app_state.api = None
+    registry = ClientRegistry(timeout=settings.apk_api_timeout)
+    app_state.registry = registry
+    try:
+        yield {"settings": settings}
+    finally:
+        await registry.close_all()
+        app_state.registry = None
 
 
 tools = [
