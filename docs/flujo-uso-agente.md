@@ -199,6 +199,17 @@ sequenceDiagram
     end
 ```
 
+### 4.3.1 Carrito del servidor (`add_to_cart` / `checkout_cart`)
+
+El carrito se identifica con el **dominio** del backend Odoo (sin `https://`) y el **user_token** del `shop-key`, no con la cabecera completa.
+
+| Entorno | Almacenamiento | Variable |
+|---------|----------------|----------|
+| Desarrollo local | Memoria del proceso | `CART_STORE_BACKEND=memory` (por defecto) |
+| Lambda / producción | DynamoDB (`backend` + `token`) | `CART_STORE_BACKEND=dynamodb` |
+
+Flujo típico: `add_to_cart` → `get_cart` → `checkout_cart` (crea pedido en Odoo y vacía el carrito si tiene éxito).
+
 ### 4.4 Actualizar dirección
 
 Muestra el patrón típico de leer un resource para resolver IDs antes de mutar con un tool.

@@ -8,7 +8,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from apk_mcp.server.app_state import get_authenticated_order_bridge
-from apk_mcp.utils.shop_key_codec import resolve_shop_context, resolve_shop_key
+from apk_mcp.utils.shop_key_codec import (
+    backend_domain,
+    resolve_shop_context,
+    resolve_shop_key,
+)
 from apk_mcp.server import app_state as app_state_module
 from apk_mcp.utils.exceptions import InvalidShopKeyError, MissingShopKeyError
 from apk_mcp.utils.shop_key_codec import encode_shop_key
@@ -46,6 +50,20 @@ def test_resolve_shop_context_from_header() -> None:
     assert ctx.storage_key == _ENCODED
     assert ctx.base_url == _BASE
     assert ctx.bearer_token == _BEARER
+    assert ctx.user_token == _USER_TOKEN
+    assert ctx.cart_store_key().backend == "localhost:8069"
+    assert ctx.cart_store_key().token == _USER_TOKEN
+
+
+def test_backend_domain_strips_scheme() -> None:
+    assert backend_domain("https://tienda.example.com") == "tienda.example.com"
+    assert backend_domain("http://localhost:8069") == "localhost:8069"
+
+
+def test_backend_domain_http_and_https_same_host() -> None:
+    assert backend_domain("http://tienda.example.com") == backend_domain(
+        "https://tienda.example.com"
+    )
 
 
 def test_resolve_shop_key_returns_raw_base64() -> None:

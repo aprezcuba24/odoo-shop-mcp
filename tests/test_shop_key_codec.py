@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import re
 
 import pytest
 
@@ -12,11 +13,13 @@ from apk_mcp.utils.shop_key_codec import (
     decode_shop_key,
     encode_shop_key,
     encode_shop_key_from_credentials,
-    parse_credentials,
 )
 
 _TOKEN = "99031c76-d288-41ea-866b-ef656f58e497"
 _BASE = "https://tienda.example.com"
+_INVALID_MSG = re.escape(
+    "Invalid shop-key: expected Bearer base64(BASE_URL|user_token)."
+)
 
 
 def test_encode_decode_roundtrip() -> None:
@@ -43,27 +46,28 @@ def test_encode_strips_trailing_slash_from_url() -> None:
 
 def test_decode_requires_bearer_prefix() -> None:
     b64 = base64.b64encode(f"{_BASE}|{_TOKEN}".encode()).decode()
-    with pytest.raises(InvalidShopKeyError):
+    with pytest.raises(InvalidShopKeyError, match=_INVALID_MSG):
         decode_shop_key(b64)
 
 
 def test_decode_invalid_base64_raises() -> None:
-    with pytest.raises(InvalidShopKeyError):
+    with pytest.raises(InvalidShopKeyError, match=_INVALID_MSG):
         decode_shop_key("Bearer not-valid-base64!!!")
 
 
-def test_parse_credentials_missing_pipe_raises() -> None:
-    with pytest.raises(InvalidShopKeyError):
-        parse_credentials("https://example.com")
+def test_decode_missing_pipe_raises() -> None:
+    payload = base64.b64encode(b"https://example.com").decode()
+    with pytest.raises(InvalidShopKeyError, match=_INVALID_MSG):
+        decode_shop_key(f"Bearer {payload}")
 
 
 def test_decode_empty_parts_raises() -> None:
     payload = base64.b64encode(b"|token").decode()
-    with pytest.raises(InvalidShopKeyError):
+    with pytest.raises(InvalidShopKeyError, match=_INVALID_MSG):
         decode_shop_key(f"Bearer {payload}")
 
     payload = base64.b64encode(b"https://x.com|").decode()
-    with pytest.raises(InvalidShopKeyError):
+    with pytest.raises(InvalidShopKeyError, match=_INVALID_MSG):
         decode_shop_key(f"Bearer {payload}")
 
 

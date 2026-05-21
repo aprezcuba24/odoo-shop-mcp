@@ -7,11 +7,17 @@ from unittest.mock import patch
 
 import pytest
 
+from apk_mcp.services.cart.base import CartStoreKey
 from apk_mcp.services.cart.memory import InMemoryCartStore
-from apk_mcp.utils.shop_key_codec import encode_shop_key
+from apk_mcp.utils.shop_key_codec import decode_shop_key, encode_shop_key
 
-_KEY_A = encode_shop_key("https://a.example.com", "token-a")
-_KEY_B = encode_shop_key("https://b.example.com", "token-b")
+
+def _cart_key(base_url: str, token: str) -> CartStoreKey:
+    return decode_shop_key(encode_shop_key(base_url, token)).cart_store_key()
+
+
+_KEY_A = _cart_key("https://a.example.com", "token-a")
+_KEY_B = _cart_key("https://b.example.com", "token-b")
 
 
 def test_add_line_accumulates_qty() -> None:
@@ -30,7 +36,8 @@ def test_add_line_accumulates_qty() -> None:
 def test_get_cart_empty() -> None:
     async def run() -> None:
         store = InMemoryCartStore()
-        assert await store.get_lines("missing") == []
+        missing = CartStoreKey(backend="missing.example.com", token="x")
+        assert await store.get_lines(missing) == []
 
     asyncio.run(run())
 
@@ -75,6 +82,20 @@ def test_separate_shop_keys() -> None:
     asyncio.run(run())
 
 
+def test_same_domain_different_scheme_shares_cart() -> None:
+    async def run() -> None:
+        store = InMemoryCartStore()
+        key_http = _cart_key("http://tienda.example.com", "tok")
+        key_https = _cart_key("https://tienda.example.com", "tok")
+        assert key_http.backend == key_https.backend == "tienda.example.com"
+
+        await store.add_line(key_http, product_id=1, quantity=1.0)
+        lines = await store.get_lines(key_https)
+        assert [(line.product_id, line.qty) for line in lines] == [(1, 1.0)]
+
+    asyncio.run(run())
+
+
 def test_add_line_rejects_non_positive_quantity() -> None:
     async def run() -> None:
         store = InMemoryCartStore()
@@ -84,13 +105,15 @@ def test_add_line_rejects_non_positive_quantity() -> None:
     asyncio.run(run())
 
 
-def test_cart_tools_use_resolve_shop_key() -> None:
+def test_cart_tools_use_resolve_shop_context() -> None:
     from apk_mcp.tools import cart as cart_tools
+
+    ctx = decode_shop_key(encode_shop_key("http://localhost:8069", "test-shop-key"))
 
     async def run() -> None:
         with patch(
-            "apk_mcp.tools.cart.resolve_shop_key",
-            return_value=encode_shop_key("http://localhost:8069", "test-shop-key"),
+            "apk_mcp.tools.cart.resolve_shop_context",
+            return_value=ctx,
         ):
             added = await cart_tools.add_to_cart(product_id=5, quantity=2.0)
             assert "client_key" not in added

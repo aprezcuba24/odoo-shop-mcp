@@ -3,14 +3,23 @@
 from __future__ import annotations
 
 import base64
+import re
 from dataclasses import dataclass
+from urllib.parse import urlparse
 
 from fastmcp.server.dependencies import get_http_request
 
+from apk_mcp.services.cart.base import CartStoreKey
 from apk_mcp.utils.exceptions import InvalidShopKeyError, MissingShopKeyError
 
 SHOP_KEY_HEADER = "shop-key"
 SHOP_KEY_BEARER_PREFIX = "Bearer "
+
+_INVALID_SHOP_KEY_MSG = (
+    "Invalid shop-key: expected Bearer base64(BASE_URL|user_token)."
+)
+_SHOP_KEY_HEADER_RE = re.compile(r"^Bearer\s+(\S+)\s*$", re.IGNORECASE)
+_CREDENTIALS_PAYLOAD_RE = re.compile(r"^(.+)\|(.+)$")
 
 
 @dataclass(frozen=True, slots=True)
@@ -20,22 +29,20 @@ class ShopContext:
     storage_key: str
     base_url: str
     bearer_token: str
+    user_token: str
+
+    def cart_store_key(self) -> CartStoreKey:
+        return CartStoreKey(
+            backend=backend_domain(self.base_url),
+            token=self.user_token,
+        )
 
 
-def parse_credentials(credentials: str) -> tuple[str, str]:
-    """Split ``BASE_URL|user_token`` (single pipe, both parts non-empty)."""
-    if "|" not in credentials:
-        raise InvalidShopKeyError(
-            "Credentials must be BASE_URL|user_token (e.g. http://localhost:8069|abc-123)."
-        )
-    base_url, user_token = credentials.split("|", 1)
-    base_url = base_url.strip()
-    user_token = user_token.strip()
-    if not base_url or not user_token:
-        raise InvalidShopKeyError(
-            "Credentials BASE_URL and user_token must be non-empty."
-        )
-    return base_url.rstrip("/"), user_token
+def backend_domain(base_url: str) -> str:
+    """Extract host (netloc) from base_url without scheme (e.g. https://)."""
+    url = base_url if "://" in base_url else f"//{base_url}"
+    netloc = urlparse(url).netloc
+    return netloc or base_url.strip("/")
 
 
 def _payload_base64(base_url: str, user_token: str) -> str:
@@ -50,30 +57,30 @@ def encode_shop_key(base_url: str, user_token: str) -> str:
 
 def encode_shop_key_from_credentials(credentials: str) -> str:
     """Encode ``BASE_URL|user_token`` into a full shop-key header value."""
-    base_url, user_token = parse_credentials(credentials)
-    return encode_shop_key(base_url, user_token)
+    base_url, _, user_token = credentials.partition("|")
+    return encode_shop_key(base_url.rstrip("/"), user_token.strip())
 
 
 def decode_shop_key(raw: str) -> ShopContext:
-    """Decode ``Bearer base64(BASE_URL|user_token)`` into backend URL and API Bearer."""
+    """Validate Bearer base64(BASE_URL|user_token) and return decoded context."""
     header = raw.strip()
-    if not header.lower().startswith(SHOP_KEY_BEARER_PREFIX.lower()):
-        raise InvalidShopKeyError(
-            "shop-key must be 'Bearer ' followed by base64(BASE_URL|user_token)."
-        )
-
-    b64_part = header[len(SHOP_KEY_BEARER_PREFIX) :].strip()
-    if not b64_part:
-        raise InvalidShopKeyError("shop-key Bearer value must not be empty.")
+    header_match = _SHOP_KEY_HEADER_RE.match(header)
+    if not header_match:
+        raise InvalidShopKeyError(_INVALID_SHOP_KEY_MSG)
 
     try:
-        decoded = base64.b64decode(b64_part, validate=True).decode()
+        decoded = base64.b64decode(
+            header_match.group(1), validate=True
+        ).decode()
     except Exception as exc:
-        raise InvalidShopKeyError(
-            "shop-key must be Bearer + base64-encoded BASE_URL|user_token."
-        ) from exc
+        raise InvalidShopKeyError(_INVALID_SHOP_KEY_MSG) from exc
 
-    base_url, user_token = parse_credentials(decoded)
+    payload_match = _CREDENTIALS_PAYLOAD_RE.match(decoded)
+    if not payload_match:
+        raise InvalidShopKeyError(_INVALID_SHOP_KEY_MSG)
+
+    base_url = payload_match.group(1).rstrip("/")
+    user_token = payload_match.group(2).strip()
     bearer_token = (
         user_token
         if user_token.lower().startswith("bearer ")
@@ -84,6 +91,7 @@ def decode_shop_key(raw: str) -> ShopContext:
         storage_key=header,
         base_url=base_url,
         bearer_token=bearer_token,
+        user_token=user_token,
     )
 
 
@@ -109,5 +117,5 @@ def resolve_shop_context() -> ShopContext:
 
 
 def resolve_shop_key() -> str:
-    """Storage key for in-memory cart (full shop-key header value)."""
+    """Full shop-key header value (legacy; cart uses cart_store_key())."""
     return resolve_shop_context().storage_key

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -17,6 +19,8 @@ class Settings(BaseSettings):
     mcp_host: str = Field(default="0.0.0.0")
     mcp_port: int = Field(default=7000, ge=1, le=65535)
     mcp_path: str = Field(default="/mcp")
+    cart_store_backend: Literal["memory", "dynamodb"] = "memory"
+    dynamodb_cart_table: str = Field(default="apk-mcp-cart")
 
 
 def get_settings() -> Settings:

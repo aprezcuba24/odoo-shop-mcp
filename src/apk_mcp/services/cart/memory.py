@@ -1,26 +1,18 @@
-"""In-memory shopping cart keyed by shop-key (resolve_shop_key)."""
+"""In-memory shopping cart (development)."""
 
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+
+from apk_mcp.services.cart.base import CartLine, CartStoreKey, normalize_lines
 
 
-@dataclass(frozen=True, slots=True)
-class CartLine:
-    product_id: int
-    qty: float
-
-
-def _normalize_lines(lines: dict[int, float]) -> list[CartLine]:
-    return [
-        CartLine(product_id=product_id, qty=qty)
-        for product_id, qty in sorted(lines.items())
-    ]
+def _storage_key(key: CartStoreKey) -> str:
+    return f"{key.backend}\0{key.token}"
 
 
 class InMemoryCartStore:
-    """Per-process cart storage: storage_key -> {product_id: qty}."""
+    """Per-process cart storage keyed by backend domain + token."""
 
     __slots__ = ("_carts", "_lock")
 
@@ -30,7 +22,7 @@ class InMemoryCartStore:
 
     async def add_line(
         self,
-        storage_key: str,
+        key: CartStoreKey,
         *,
         product_id: int,
         quantity: float,
@@ -38,21 +30,21 @@ class InMemoryCartStore:
         if quantity <= 0:
             raise ValueError("quantity must be greater than 0.")
 
+        storage_key = _storage_key(key)
         async with self._lock:
             cart = self._carts.setdefault(storage_key, {})
             cart[product_id] = cart.get(product_id, 0.0) + quantity
-            return _normalize_lines(cart)
+            return normalize_lines(cart)
 
-    async def get_lines(self, storage_key: str) -> list[CartLine]:
+    async def get_lines(self, key: CartStoreKey) -> list[CartLine]:
+        storage_key = _storage_key(key)
         async with self._lock:
             cart = self._carts.get(storage_key)
             if not cart:
                 return []
-            return _normalize_lines(cart)
+            return normalize_lines(cart)
 
-    async def clear(self, storage_key: str) -> None:
+    async def clear(self, key: CartStoreKey) -> None:
+        storage_key = _storage_key(key)
         async with self._lock:
             self._carts.pop(storage_key, None)
-
-
-cart_store = InMemoryCartStore()

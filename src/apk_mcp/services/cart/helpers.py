@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from apk_mcp.services.cart.memory import CartLine
+from apk_mcp.services.cart.base import CartLine
 
 
 def lines_payload(lines: list[CartLine]) -> list[dict[str, float | int]]:

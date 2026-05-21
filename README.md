@@ -31,6 +31,8 @@ Copia `.env.example` a `.env` y ajusta:
 |----------|-------------|
 | `APK_API_TIMEOUT` | Timeout HTTP en segundos |
 | `MCP_HOST` / `MCP_PORT` / `MCP_PATH` | Bind y ruta del endpoint MCP (p. ej. `/mcp`) |
+| `CART_STORE_BACKEND` | `memory` (desarrollo) o `dynamodb` (Lambda/producción) |
+| `DYNAMODB_CART_TABLE` | Nombre de tabla DynamoDB del carrito (solo con `dynamodb`) |
 
 ### Autenticación (`shop-key` y Bearer)
 
@@ -124,16 +126,18 @@ Más detalle en la documentación de GitHub: [Extender Copilot Chat con servidor
 | `get_last_order` | `GET /orders?limit=1` + `GET /orders/{id}` | Bearer |
 | `get_order` | `GET /orders/{id}` | Bearer |
 | `create_order` | `POST /orders` | Bearer |
-| `checkout_cart` | `POST /orders` (líneas del carrito en memoria) | Bearer |
+| `checkout_cart` | `POST /orders` (líneas del carrito del servidor) | Bearer |
 | `cancel_order` | `POST /orders/{id}/cancel` | Bearer |
 | `get_profile` | `GET /profile` | Bearer |
 | `update_profile` | `PATCH /profile` | Bearer |
 | `replace_profile` | `PUT /profile` | Bearer |
 | `register_push_token` | `POST /push/token` | Bearer |
 | `update_push_topics` | `PATCH /push/topics` | Bearer |
-| `add_to_cart` | Carrito en memoria (clave = cabecera `shop-key`) | `shop-key` |
-| `get_cart` | Consulta carrito en memoria | `shop-key` |
-| `clear_cart` | Vacía carrito en memoria | `shop-key` |
+| `add_to_cart` | Carrito del servidor (dominio + token del `shop-key`) | `shop-key` |
+| `get_cart` | Consulta carrito del servidor | `shop-key` |
+| `clear_cart` | Vacía carrito del servidor | `shop-key` |
+
+En **desarrollo** (`CART_STORE_BACKEND=memory`) el carrito vive en el proceso MCP. En **Lambda** (`dynamodb`) se persiste en DynamoDB con clave `backend` (dominio del Odoo, sin `https://`) + `token` (user_token del `shop-key`).
 
 ### Resources
 

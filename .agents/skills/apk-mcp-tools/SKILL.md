@@ -22,7 +22,7 @@ description: >-
 
 ## Autenticación (`shop-key`, Streamable HTTP)
 
-Cada petición HTTP al MCP debe incluir la cabecera **`shop-key`**: `Bearer` + base64(`BASE_URL|user_token`). [`resolve_shop_context`](src/apk_mcp/utils/shop_key_codec.py) decodifica URL y token; [`resolve_shop_key`](src/apk_mcp/utils/shop_key_codec.py) devuelve el header completo como clave de carrito. Dev: `pnpm shop-key -- http://localhost:8069|<user_token>`.
+Cada petición HTTP al MCP debe incluir la cabecera **`shop-key`**: `Bearer` + base64(`BASE_URL|user_token`). [`resolve_shop_context`](src/apk_mcp/utils/shop_key_codec.py) decodifica URL y token; para el carrito usar **`ctx.cart_store_key()`** → `CartStoreKey(backend=dominio netloc, token=user_token)` vía [`cart_store`](src/apk_mcp/services/cart/__init__.py) (`memory` en dev, DynamoDB en Lambda). Dev: `pnpm shop-key -- http://localhost:8069|<user_token>`.
 
 Tools and resources stay thin; services own endpoint selection, `UNSET` optional args, and success/error typing.
 

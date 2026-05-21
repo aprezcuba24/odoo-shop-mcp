@@ -1,11 +1,11 @@
-"""Herramientas de carrito en memoria (clave = cabecera shop-key vía resolve_shop_key)."""
+"""Herramientas de carrito del servidor (clave = dominio + token del shop-key)."""
 
 from __future__ import annotations
 
 from typing import Any
 
 from apk_mcp.server import mcp
-from apk_mcp.utils.shop_key_codec import resolve_shop_key
+from apk_mcp.utils.shop_key_codec import resolve_shop_context
 from apk_mcp.services.cart import CartLine, cart_store, lines_payload
 
 
@@ -30,8 +30,8 @@ def _cart_response(
 @mcp.tool(
     name="add_to_cart",
     description=(
-        "Añade o actualiza un producto en el carrito en memoria del servidor MCP. "
-        "El carrito se identifica con la cabecera HTTP shop-key del cliente (Bearer del dispositivo). "
+        "Añade o actualiza un producto en el carrito del servidor MCP. "
+        "El carrito se identifica con la cabecera HTTP shop-key (dominio del backend + token). "
         "Parámetros: product_id y quantity (> 0). Si el producto ya está en el carrito, suma la cantidad. "
         "Devuelve line_count, total_qty y _agent.lines (product_id, qty) para uso interno del agente."
     ),
@@ -40,9 +40,9 @@ async def add_to_cart(
     product_id: int,
     quantity: float,
 ) -> dict[str, Any]:
-    client_key = resolve_shop_key()
+    key = resolve_shop_context().cart_store_key()
     lines = await cart_store.add_line(
-        client_key,
+        key,
         product_id=product_id,
         quantity=quantity,
     )
@@ -52,24 +52,24 @@ async def add_to_cart(
 @mcp.tool(
     name="get_cart",
     description=(
-        "Obtiene el carrito en memoria del dispositivo actual (cabecera HTTP shop-key). "
+        "Obtiene el carrito del dispositivo actual (cabecera HTTP shop-key). "
         "Devuelve line_count, total_qty y _agent.lines (product_id, qty)."
     ),
 )
 async def get_cart() -> dict[str, Any]:
-    client_key = resolve_shop_key()
-    lines = await cart_store.get_lines(client_key)
+    key = resolve_shop_context().cart_store_key()
+    lines = await cart_store.get_lines(key)
     return _cart_response(lines)
 
 
 @mcp.tool(
     name="clear_cart",
     description=(
-        "Vacía el carrito en memoria del dispositivo actual (cabecera HTTP shop-key). "
+        "Vacía el carrito del dispositivo actual (cabecera HTTP shop-key). "
         "Idempotente si el carrito ya estaba vacío."
     ),
 )
 async def clear_cart() -> dict[str, Any]:
-    client_key = resolve_shop_key()
-    await cart_store.clear(client_key)
+    key = resolve_shop_context().cart_store_key()
+    await cart_store.clear(key)
     return _cart_response([], message="Carrito vaciado.")

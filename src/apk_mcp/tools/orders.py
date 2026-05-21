@@ -12,7 +12,7 @@ from apk_mcp.server import (
     get_authenticated_order_bridge,
     mcp,
 )
-from apk_mcp.utils.shop_key_codec import resolve_shop_key
+from apk_mcp.utils.shop_key_codec import resolve_shop_context
 from apk_mcp.services.cart import cart_store, lines_payload
 from apk_mcp.services.order_bridge.orders import (
     cancel_order,
@@ -111,7 +111,7 @@ async def tool_create_order(
 @mcp.tool(
     name="checkout_cart",
     description=(
-        "Confirma el pedido con el carrito en memoria del dispositivo actual "
+        "Confirma el pedido con el carrito del dispositivo actual "
         "(POST /api/order_bridge/orders, Bearer). Lee las líneas del carrito asociado "
         "a la cabecera HTTP shop-key (add_to_cart / get_cart). Si el pedido se crea "
         "correctamente, vacía el carrito. Devuelve ok=true con order (order_number, status). "
@@ -123,8 +123,8 @@ async def tool_create_order(
 async def checkout_cart(
     auth: AuthenticatedOrderBridgeRef = Depends(get_authenticated_order_bridge),
 ) -> dict[str, Any]:
-    client_key = resolve_shop_key()
-    cart_lines = await cart_store.get_lines(client_key)
+    key = resolve_shop_context().cart_store_key()
+    cart_lines = await cart_store.get_lines(key)
     lines_submitted = lines_payload(cart_lines)
 
     if not lines_submitted:
@@ -147,7 +147,7 @@ async def checkout_cart(
         body = exc.body or {}
         return present_insufficient_stock(body, lines_submitted=lines_submitted)
 
-    await cart_store.clear(client_key)
+    await cart_store.clear(key)
     return {
         "ok": True,
         "order": order,
