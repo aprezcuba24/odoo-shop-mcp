@@ -9,8 +9,8 @@ from typing import Any
 from app.services.cart.base import CartLine, CartStoreKey, normalize_lines
 
 
-def _lines_to_dynamo(lines: dict[int, float]) -> dict[str, Decimal]:
-    return {str(product_id): Decimal(str(qty)) for product_id, qty in lines.items()}
+def _lines_to_dynamo(lines: dict[int, float]) -> dict[str, dict[str, str]]:
+    return {str(product_id): {"N": str(qty)} for product_id, qty in lines.items()}
 
 
 def _dynamo_number(value: Any) -> float:
@@ -33,8 +33,8 @@ def _lines_from_dynamo(raw: dict[str, Any] | None) -> dict[int, float]:
     return result
 
 
-def _item_key(key: CartStoreKey) -> dict[str, str]:
-    return {"backend": key.backend, "token": key.token}
+def _item_key(key: CartStoreKey) -> dict[str, dict[str, str]]:
+    return {"backend": {"S": key.backend}, "token": {"S": key.token}}
 
 
 class DynamoDBCartStore:

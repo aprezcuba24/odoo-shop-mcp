@@ -45,7 +45,7 @@ def test_add_line_creates_item() -> None:
         put_args = client.put_item.call_args.kwargs
         assert put_args["TableName"] == _TABLE
         assert put_args["Item"]["backend"]["S"] == _KEY.backend
-        assert put_args["Item"]["lines"]["M"]["3"] == Decimal("2.0")
+        assert put_args["Item"]["lines"]["M"]["3"] == {"N": "2.0"}
 
     asyncio.run(run())
 
@@ -61,7 +61,7 @@ def test_add_line_merges_existing() -> None:
         assert len(lines) == 1
         assert lines[0].qty == 3.0
         put_lines = client.put_item.call_args.kwargs["Item"]["lines"]["M"]
-        assert put_lines["3"] == Decimal("3.0")
+        assert put_lines["3"] == {"N": "3.0"}
 
     asyncio.run(run())
 
@@ -98,7 +98,10 @@ def test_clear_deletes_item() -> None:
 
         client.delete_item.assert_called_once_with(
             TableName=_TABLE,
-            Key={"backend": _KEY.backend, "token": _KEY.token},
+            Key={
+                "backend": {"S": _KEY.backend},
+                "token": {"S": _KEY.token},
+            },
         )
 
     asyncio.run(run())
