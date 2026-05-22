@@ -6,8 +6,8 @@ import asyncio
 from decimal import Decimal
 from unittest.mock import MagicMock
 
-from apk_mcp.services.cart.base import CartStoreKey
-from apk_mcp.services.cart.dynamodb import DynamoDBCartStore
+from app.services.cart.base import CartStoreKey
+from app.services.cart.dynamodb import DynamoDBCartStore
 
 _KEY = CartStoreKey(backend="tienda.example.com", token="device-token-1")
 _TABLE = "test-cart-table"

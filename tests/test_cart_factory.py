@@ -2,10 +2,10 @@
 
 from unittest.mock import MagicMock, patch
 
-from apk_mcp.config import Settings
-from apk_mcp.services.cart.factory import create_cart_store
-from apk_mcp.services.cart.dynamodb import DynamoDBCartStore
-from apk_mcp.services.cart.memory import InMemoryCartStore
+from app.config import Settings
+from app.services.cart.factory import create_cart_store
+from app.services.cart.dynamodb import DynamoDBCartStore
+from app.services.cart.memory import InMemoryCartStore
 
 
 def test_create_cart_store_memory_default() -> None:
@@ -16,7 +16,7 @@ def test_create_cart_store_memory_default() -> None:
 def test_create_cart_store_dynamodb() -> None:
     mock_store = MagicMock(spec=DynamoDBCartStore)
     with patch(
-        "apk_mcp.services.cart.factory.DynamoDBCartStore",
+        "app.services.cart.factory.DynamoDBCartStore",
         return_value=mock_store,
     ) as mock_cls:
         store = create_cart_store(

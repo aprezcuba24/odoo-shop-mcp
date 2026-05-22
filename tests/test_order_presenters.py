@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from apk_mcp.services.order_bridge.order_presenters import (
+from app.services.order_bridge.order_presenters import (
     present_insufficient_stock,
     present_order_cancelled,
     present_order_created,

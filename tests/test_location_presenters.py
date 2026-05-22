@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from apk_mcp.services.order_bridge.location_presenters import (
+from app.services.order_bridge.location_presenters import (
     present_municipalities_list,
     present_municipality_row,
 )

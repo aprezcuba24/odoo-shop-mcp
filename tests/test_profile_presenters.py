@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from apk_mcp.services.order_bridge.profile_presenters import present_profile
+from app.services.order_bridge.profile_presenters import present_profile
 
 _RAW_PROFILE = {
     "id": 101,

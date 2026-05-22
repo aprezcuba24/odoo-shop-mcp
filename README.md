@@ -54,7 +54,7 @@ Si Tienda Apk exige que el dispositivo esté registrado en Odoo, un **401** pued
 ## Ejecución
 
 ```bash
-python -m apk_mcp
+python -m app
 # o
 apk-mcp
 ```
@@ -85,7 +85,7 @@ También puedes ejecutar por separado `pnpm run mcp:server` y `pnpm run inspecto
 
 Este servidor expone **Streamable HTTP**; en VS Code se declara como servidor MCP de tipo **`http`**. El cliente intenta primero el transporte HTTP stream y, si hace falta, compatible con SSE (ver [referencia MCP en VS Code](https://code.visualstudio.com/docs/copilot/reference/mcp-configuration)).
 
-1. Arranca el servidor MCP en local (o detrás de HTTPS si es remoto), p. ej. `python -m apk_mcp`, y anota la URL completa del endpoint (host, puerto y ruta), p. ej. `http://127.0.0.1:7000/mcp`.
+1. Arranca el servidor MCP en local (o detrás de HTTPS si es remoto), p. ej. `python -m app`, y anota la URL completa del endpoint (host, puerto y ruta), p. ej. `http://127.0.0.1:7000/mcp`.
 2. Abre la configuración MCP del **workspace** o del **usuario**:
    - Paleta de comandos: **“MCP: Open Workspace Folder MCP Configuration”** → crea o edita [`.vscode/mcp.json`](https://code.visualstudio.com/docs/copilot/customization/mcp-servers), o
    - **“MCP: Open User Configuration”** si quieres el mismo servidor en todos los proyectos.
@@ -164,7 +164,7 @@ En **desarrollo** (`CART_STORE_BACKEND=memory`) el carrito vive en el proceso MC
 | `update_my_address` | Actualizar dirección resolviendo IDs de municipio/barrio |
 | `onboard_device` | Registrar dispositivo (token desde `shop-key`) y reportar validación |
 
-Añadir nuevos endpoints sigue el patrón en `src/apk_mcp/tools/`, `src/apk_mcp/resources/` y `src/apk_mcp/prompts/`; ver también `.agents/skills/apk-mcp-tools/SKILL.md`.
+Añadir nuevos endpoints sigue el patrón en `app/app/tools/`, `app/app/resources/` y `app/app/prompts/`; ver también `.agents/skills/apk-mcp-tools/SKILL.md`.
 
 ## Licencia
 

@@ -56,7 +56,7 @@ La ruta y el puerto se controlan con `MCP_PATH` y `MCP_PORT` en `.env` (ver READ
 
 Una vez conectado, el host negocia capacidades con el servidor y el agente puede listar e invocar tools, leer resources y obtener plantillas de prompts.
 
-**Multi-tenant (Streamable HTTP):** cada petición HTTP al endpoint MCP puede llevar la cabecera **`X-Apk-Tenant-Id`** (nombre configurable con `APK_MCP_TENANT_HEADER`) para aislar dispositivos y pedidos por cliente. Si no la envías y `APK_MCP_REQUIRE_TENANT_HEADER` es `false`, el servidor usa el tenant de respaldo `APK_MCP_FALLBACK_TENANT_ID` (por defecto `default`), adecuado para desarrollo local.
+**Multi-tenant (Streamable HTTP):** cada petición HTTP al endpoint MCP puede llevar la cabecera **`X-Apk-Tenant-Id`** (nombre configurable con `app_TENANT_HEADER`) para aislar dispositivos y pedidos por cliente. Si no la envías y `app_REQUIRE_TENANT_HEADER` es `false`, el servidor usa el tenant de respaldo `app_FALLBACK_TENANT_ID` (por defecto `default`), adecuado para desarrollo local.
 
 ---
 
@@ -234,7 +234,7 @@ El servidor mantiene un mapa **tenant_id → token** (`InMemoryTenantCredentialS
 Consecuencias para el integrador:
 
 - **No hay persistencia en disco.** Si reinicias el proceso MCP, los tokens por tenant se regeneran; en Odoo puede ser necesario repetir registro/aprobación según tu política.
-- **Varios usuarios en paralelo:** configura cabeceras distintas por cliente (`X-Apk-Tenant-Id` u otra vía `APK_MCP_TENANT_HEADER`) para que no compartan pedidos ni perfil.
+- **Varios usuarios en paralelo:** configura cabeceras distintas por cliente (`X-Apk-Tenant-Id` u otra vía `app_TENANT_HEADER`) para que no compartan pedidos ni perfil.
 - **Un 401 remoto no siempre indica problema local.** Puede ser dispositivo no aprobado en Odoo, no solo un fallo de token.
 
 ### Rutas públicas vs Bearer

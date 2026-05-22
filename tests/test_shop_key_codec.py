@@ -7,8 +7,8 @@ import re
 
 import pytest
 
-from apk_mcp.utils.exceptions import InvalidShopKeyError
-from apk_mcp.utils.shop_key_codec import (
+from app.utils.exceptions import InvalidShopKeyError
+from app.utils.shop_key_codec import (
     SHOP_KEY_BEARER_PREFIX,
     decode_shop_key,
     encode_shop_key,

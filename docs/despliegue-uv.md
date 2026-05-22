@@ -19,7 +19,7 @@ uv sync
 ## Ejecutar el servidor MCP
 
 ```bash
-uv run python -m apk_mcp
+uv run python -m app
 # o
 uv run apk-mcp
 ```

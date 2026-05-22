@@ -9,10 +9,10 @@ cd "$ROOT"
 
 OPENAPI_URL="${OPENAPI_URL:-http://localhost:8069/order_bridge/static/openapi.json}"
 SPEC="$ROOT/.cache/order_bridge_openapi.json"
-MODELS_OUT="$ROOT/src/apk_mcp/generated/order_bridge_models.py"
-CLIENT_DIR="$ROOT/src/apk_mcp/generated/order_bridge_client"
+MODELS_OUT="$ROOT/app/app/generated/order_bridge_models.py"
+CLIENT_DIR="$ROOT/app/app/generated/order_bridge_client"
 
-mkdir -p "$ROOT/.cache" "$ROOT/src/apk_mcp/generated"
+mkdir -p "$ROOT/.cache" "$ROOT/app/app/generated"
 
 echo "==> Fetching OpenAPI: $OPENAPI_URL"
 curl -fsSL "$OPENAPI_URL" -o "$SPEC"

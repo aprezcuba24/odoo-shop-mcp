@@ -5,9 +5,9 @@ from __future__ import annotations
 import asyncio
 from unittest.mock import AsyncMock, patch
 
-from apk_mcp.services.cart.memory import InMemoryCartStore
-from apk_mcp.utils.exceptions import InsufficientStockError
-from apk_mcp.utils.shop_key_codec import decode_shop_key, encode_shop_key
+from app.services.cart.memory import InMemoryCartStore
+from app.utils.exceptions import InsufficientStockError
+from app.utils.shop_key_codec import decode_shop_key, encode_shop_key
 
 _CTX = decode_shop_key(encode_shop_key("http://localhost:8069", "test-key"))
 _CART_KEY = _CTX.cart_store_key()
@@ -18,16 +18,16 @@ def _auth_stub(*, bearer_token: str = "Bearer test-key") -> object:
 
 
 def test_checkout_cart_empty() -> None:
-    from apk_mcp.tools import orders as orders_tools
+    from app.tools import orders as orders_tools
 
     async def run() -> None:
         with (
             patch(
-                "apk_mcp.tools.orders.resolve_shop_context",
+                "app.tools.orders.resolve_shop_context",
                 return_value=_CTX,
             ),
             patch(
-                "apk_mcp.tools.orders.create_order",
+                "app.tools.orders.create_order",
                 new_callable=AsyncMock,
             ) as mock_create,
         ):
@@ -41,18 +41,18 @@ def test_checkout_cart_empty() -> None:
 
 
 def test_checkout_cart_success_clears_cart() -> None:
-    from apk_mcp.tools import orders as orders_tools
+    from app.tools import orders as orders_tools
 
     async def run() -> None:
         store = InMemoryCartStore()
         with (
             patch(
-                "apk_mcp.tools.orders.resolve_shop_context",
+                "app.tools.orders.resolve_shop_context",
                 return_value=_CTX,
             ),
-            patch("apk_mcp.tools.orders.cart_store", store),
+            patch("app.tools.orders.cart_store", store),
             patch(
-                "apk_mcp.tools.orders.create_order",
+                "app.tools.orders.create_order",
                 new_callable=AsyncMock,
                 return_value={
                     "order_number": "S00101",
@@ -77,18 +77,18 @@ def test_checkout_cart_success_clears_cart() -> None:
 
 
 def test_checkout_cart_insufficient_stock_keeps_cart() -> None:
-    from apk_mcp.tools import orders as orders_tools
+    from app.tools import orders as orders_tools
 
     async def run() -> None:
         store = InMemoryCartStore()
         with (
             patch(
-                "apk_mcp.tools.orders.resolve_shop_context",
+                "app.tools.orders.resolve_shop_context",
                 return_value=_CTX,
             ),
-            patch("apk_mcp.tools.orders.cart_store", store),
+            patch("app.tools.orders.cart_store", store),
             patch(
-                "apk_mcp.tools.orders.create_order",
+                "app.tools.orders.create_order",
                 new_callable=AsyncMock,
                 side_effect=InsufficientStockError(
                     "Solo hay 1 unidad disponible.",

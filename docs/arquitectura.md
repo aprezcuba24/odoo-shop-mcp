@@ -18,16 +18,16 @@ Servidor **MCP** (FastMCP, transporte **Streamable HTTP**) que expone *tools* al
 ## Flujo resumido
 
 1. El cliente abre sesión MCP sobre HTTP (`/mcp`).
-2. El lifespan crea un [`ClientRegistry`](src/apk_mcp/server/app_state.py) (pool lazy de `httpx.AsyncClient` por URL de backend decodificada del `shop-key`).
-3. Cada petición HTTP al MCP lleva (según configuración) una cabecera de tenant; [`resolve_tenant_id`](src/apk_mcp/server/tenant_resolution.py) la lee vía [`get_http_request`](https://gofastmcp.com) de FastMCP.
+2. El lifespan crea un [`ClientRegistry`](app/app/server/app_state.py) (pool lazy de `httpx.AsyncClient` por URL de backend decodificada del `shop-key`).
+3. Cada petición HTTP al MCP lleva (según configuración) una cabecera de tenant; [`resolve_tenant_id`](app/app/server/tenant_resolution.py) la lee vía [`get_http_request`](https://gofastmcp.com) de FastMCP.
 4. Un tool (p. ej. `list_products`) usa `app_state.api` → `GET /api/order_bridge/products` (público).
 5. Rutas Bearer llaman a `ensure_device_token(tenant_id)` para el tenant actual y aplican `bearer_authorization` al cliente generado.
 
 ## Credenciales en memoria (multi-tenant)
 
-- Implementación: [`InMemoryTenantCredentialStore`](src/apk_mcp/utils/tenant_credentials.py) — un token estable por `tenant_id` mientras viva el proceso.
+- Implementación: [`InMemoryTenantCredentialStore`](app/app/utils/tenant_credentials.py) — un token estable por `tenant_id` mientras viva el proceso.
 - **No hay persistencia en disco**: al reiniciar el proceso MCP las claves por tenant se pierden.
-- Identidad MCP: cabecera configurable (`APK_MCP_TENANT_HEADER`, defecto `X-Apk-Tenant-Id`); si falta y no se exige, se usa `APK_MCP_FALLBACK_TENANT_ID` (defecto `default`).
+- Identidad MCP: cabecera configurable (`app_TENANT_HEADER`, defecto `X-Apk-Tenant-Id`); si falta y no se exige, se usa `app_FALLBACK_TENANT_ID` (defecto `default`).
 - La API de Tienda Apk puede seguir exigiendo registro en Odoo; un 401 remoto no equivale a “falta token local”.
 
 ## Extensión

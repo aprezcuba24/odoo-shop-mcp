@@ -1,9 +1,6 @@
 service: apk-mcp
 frameworkVersion: "4"
 
-plugins:
-  - serverless-python-requirements
-
 provider:
   name: aws
   runtime: python3.12
@@ -12,8 +9,6 @@ provider:
   deploymentBucket:
     name: apk-mcp-serverless-deployments-us-east-1
   environment:
-    # PYTHONPATH: /var/task/src:/var/task
-    # MCP_PATH: /mcp
     APK_API_TIMEOUT: "30"
     CART_STORE_BACKEND: dynamodb
     DYNAMODB_CART_TABLE: ${self:service}-cart-${sls:stage}
@@ -30,7 +25,7 @@ provider:
 
 functions:
   mcp:
-    handler: src/apk_mcp/lambda_handler.handler
+    handler: app/lambda_handler.handler
     url: true
 
 resources:
@@ -59,24 +54,18 @@ custom:
       - lambda
     dockerizePip: non-linux
     slim: true
+    slimPatternsAppendDefaults: false
+    slimPatterns:
+      - "**/*.py[c|o]"
+      - "**/__pycache__*"
     noDeploy:
       - cryptography
       - authlib
       - joserfc
       - cffi
       - pycparser
-      - rich
       - cyclopts
       - docutils
-      - pygments
-      - markdown-it-py
-      - mdurl
-      - uvicorn
-      - watchfiles
-      - websockets
-      - opentelemetry-api
-      - importlib-metadata
-      - zipp
       - keyring
       - secretstorage
       - jeepney
@@ -89,10 +78,5 @@ custom:
 
 package:
   patterns:
-    - "!tests/**"
-    - "!**/*.md"
-    - "!node_modules/**"
-    - "!.venv/**"
-    - "!.git/**"
-    - "!.serverless/**"
-    - "!.requirements/**"
+    - '!./**'
+    - app/**

@@ -7,9 +7,9 @@ from unittest.mock import patch
 
 import pytest
 
-from apk_mcp.services.cart.base import CartStoreKey
-from apk_mcp.services.cart.memory import InMemoryCartStore
-from apk_mcp.utils.shop_key_codec import decode_shop_key, encode_shop_key
+from app.services.cart.base import CartStoreKey
+from app.services.cart.memory import InMemoryCartStore
+from app.utils.shop_key_codec import decode_shop_key, encode_shop_key
 
 
 def _cart_key(base_url: str, token: str) -> CartStoreKey:
@@ -106,13 +106,13 @@ def test_add_line_rejects_non_positive_quantity() -> None:
 
 
 def test_cart_tools_use_resolve_shop_context() -> None:
-    from apk_mcp.tools import cart as cart_tools
+    from app.tools import cart as cart_tools
 
     ctx = decode_shop_key(encode_shop_key("http://localhost:8069", "test-shop-key"))
 
     async def run() -> None:
         with patch(
-            "apk_mcp.tools.cart.resolve_shop_context",
+            "app.tools.cart.resolve_shop_context",
             return_value=ctx,
         ):
             added = await cart_tools.add_to_cart(product_id=5, quantity=2.0)

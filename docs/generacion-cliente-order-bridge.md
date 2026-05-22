@@ -8,8 +8,8 @@ Tras ejecutar el comando de generación se crean o actualizan:
 
 | Artefacto | Ruta | Herramienta | Rol |
 |-----------|------|-------------|-----|
-| **Modelos Pydantic** (esquemas del OpenAPI) | `src/apk_mcp/generated/order_bridge_models.py` | [datamodel-code-generator](https://github.com/koxudaxi/datamodel-code-generator) | Tipos `BaseModel` útiles para validar o documentar datos alineados con el contrato OpenAPI. |
-| **Cliente HTTP** (endpoints listos) | `src/apk_mcp/generated/order_bridge_client/` | [openapi-python-client](https://github.com/openapi-generators/openapi-python-client) | Clase `Client` / `AuthenticatedClient` con **httpx**, más un módulo por operación bajo `api/default/`. Los cuerpos y respuestas aquí usan modelos **attrs** generados en `order_bridge_client/models/`. |
+| **Modelos Pydantic** (esquemas del OpenAPI) | `app/app/generated/order_bridge_models.py` | [datamodel-code-generator](https://github.com/koxudaxi/datamodel-code-generator) | Tipos `BaseModel` útiles para validar o documentar datos alineados con el contrato OpenAPI. |
+| **Cliente HTTP** (endpoints listos) | `app/app/generated/order_bridge_client/` | [openapi-python-client](https://github.com/openapi-generators/openapi-python-client) | Clase `Client` / `AuthenticatedClient` con **httpx**, más un módulo por operación bajo `api/default/`. Los cuerpos y respuestas aquí usan modelos **attrs** generados en `order_bridge_client/models/`. |
 
 La especificación se descarga una vez a **`.cache/order_bridge_openapi.json`** (carpeta ignorada por git). Ese archivo es la entrada común para ambos generadores.
 
@@ -61,11 +61,11 @@ Debe coincidir con el origen de la API Odoo **sin** path extra de módulo (por e
 
 ### Importaciones
 
-Con el paquete instalado en modo editable o con `PYTHONPATH` apuntando a `src`:
+Con el paquete instalado en modo editable o con `PYTHONPATH` apuntando a `app`:
 
 ```python
-from apk_mcp.generated.order_bridge_client import Client
-from apk_mcp.generated.order_bridge_client.api.default import order_bridge_products
+from app.generated.order_bridge_client import Client
+from app.generated.order_bridge_client.api.default import order_bridge_products
 ```
 
 ### Llamada síncrona
@@ -95,7 +95,7 @@ data = await order_bridge_products.asyncio(client=client, limit=20, offset=0)
 Para rutas que exigen cabeceras o token según el OpenAPI, el generador expone **`AuthenticatedClient`**. Impórtalo desde el mismo paquete del cliente y pásalo donde el tipo acepte `Client | AuthenticatedClient`.
 
 ```python
-from apk_mcp.generated.order_bridge_client import AuthenticatedClient
+from app.generated.order_bridge_client import AuthenticatedClient
 
 client = AuthenticatedClient(
     base_url="http://localhost:8069",
@@ -112,7 +112,7 @@ Los campos `token`, `prefix` y `auth_header_name` salen del cliente generado; si
 Sirven para tipar o validar datos contra el mismo contrato OpenAPI **sin** pasar por el cliente generado, por ejemplo en tests o en DTOs internos:
 
 ```python
-from apk_mcp.generated import order_bridge_models
+from app.generated import order_bridge_models
 
 # Ejemplo: instancia o validación según el nombre de clase generado en el archivo
 # item = order_bridge_models.Algo(...)
@@ -122,7 +122,7 @@ Abre `order_bridge_models.py` y usa las clases que correspondan a `components.sc
 
 ## Buenas prácticas
 
-- **No edites a mano** los archivos bajo `generated/`; cualquier cambio se perderá en la próxima generación. Si necesitas adaptadores, colócalos en otro módulo (por ejemplo `apk_mcp/adapters/`).
+- **No edites a mano** los archivos bajo `generated/`; cualquier cambio se perderá en la próxima generación. Si necesitas adaptadores, colócalos en otro módulo (por ejemplo `app/adapters/`).
 - Tras cambios en la API Odoo, vuelve a ejecutar `pnpm run gen:order-bridge-types` y revisa el diff en git.
 - Si el generador del cliente avisa de **ruff** no encontrado, puedes instalar **ruff** en el entorno virtual; la generación suele completarse igualmente.
 

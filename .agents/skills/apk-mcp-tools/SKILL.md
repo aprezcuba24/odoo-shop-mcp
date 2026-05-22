@@ -5,8 +5,8 @@ description: >-
   layout, @mcp.tool / @mcp.resource / @mcp.prompt wiring,
   Depends(get_apk_api | get_authenticated_order_bridge), and thin services that
   call the generated order_bridge Client via client_helper. Use when adding or
-  changing MCP surface under src/apk_mcp/tools, src/apk_mcp/resources or
-  src/apk_mcp/prompts, wiring Tienda Apk order_bridge endpoints, or mirroring
+  changing MCP surface under app/app/tools, app/app/resources or
+  app/app/prompts, wiring Tienda Apk order_bridge endpoints, or mirroring
   existing patterns.
 ---
 
@@ -14,15 +14,15 @@ description: >-
 
 ## Architecture (keep this separation)
 
-1. **`src/apk_mcp/tools/`** — MCP tools: `@mcp.tool`, descriptions shown to the model, typed parameters. No raw HTTP.
-2. **`src/apk_mcp/resources/`** — MCP resources: `@mcp.resource`, static or templated URIs. Read-only, browseable by hosts/users.
-3. **`src/apk_mcp/prompts/`** — MCP prompts: `@mcp.prompt`, multi-step workflow templates that return `list[Message]`.
-4. **`src/apk_mcp/services/order_bridge/`** — One module per domain; calls the **generated** `openapi-python-client` and uses **`client_helper`** / **`bearer_authorization`** from `apk_mcp.utils.openapi_detailed`.
-5. **`src/apk_mcp/server/app_state.py`** — Lifespan singleton: generated `Client`. Exposes **`get_apk_api`** (public), **`get_authenticated_order_bridge`** (Bearer from request), and **`resolve_shop_key()`** when a public tool needs the same token as `POST /register` (`register_device`).
+1. **`app/app/tools/`** — MCP tools: `@mcp.tool`, descriptions shown to the model, typed parameters. No raw HTTP.
+2. **`app/app/resources/`** — MCP resources: `@mcp.resource`, static or templated URIs. Read-only, browseable by hosts/users.
+3. **`app/app/prompts/`** — MCP prompts: `@mcp.prompt`, multi-step workflow templates that return `list[Message]`.
+4. **`app/app/services/order_bridge/`** — One module per domain; calls the **generated** `openapi-python-client` and uses **`client_helper`** / **`bearer_authorization`** from `app.utils.openapi_detailed`.
+5. **`app/app/server/app_state.py`** — Lifespan singleton: generated `Client`. Exposes **`get_apk_api`** (public), **`get_authenticated_order_bridge`** (Bearer from request), and **`resolve_shop_key()`** when a public tool needs the same token as `POST /register` (`register_device`).
 
 ## Autenticación (`shop-key`, Streamable HTTP)
 
-Cada petición HTTP al MCP debe incluir la cabecera **`shop-key`**: `Bearer` + base64(`BASE_URL|user_token`). [`resolve_shop_context`](src/apk_mcp/utils/shop_key_codec.py) decodifica URL y token; para el carrito usar **`ctx.cart_store_key()`** → `CartStoreKey(backend=dominio netloc, token=user_token)` vía [`cart_store`](src/apk_mcp/services/cart/__init__.py) (`memory` en dev, DynamoDB en Lambda). Dev: `pnpm shop-key -- http://localhost:8069|<user_token>`.
+Cada petición HTTP al MCP debe incluir la cabecera **`shop-key`**: `Bearer` + base64(`BASE_URL|user_token`). [`resolve_shop_context`](app/app/utils/shop_key_codec.py) decodifica URL y token; para el carrito usar **`ctx.cart_store_key()`** → `CartStoreKey(backend=dominio netloc, token=user_token)` vía [`cart_store`](app/app/services/cart/__init__.py) (`memory` en dev, DynamoDB en Lambda). Dev: `pnpm shop-key -- http://localhost:8069|<user_token>`.
 
 Tools and resources stay thin; services own endpoint selection, `UNSET` optional args, and success/error typing.
 
@@ -41,8 +41,8 @@ Authenticated handlers pass **`auth.client`** and **`auth.bearer_token`** into t
 
 ## Adding a tool
 
-1. Add `your_feature.py` under `src/apk_mcp/tools/`.
-2. Import it from `src/apk_mcp/tools/__init__.py`:
+1. Add `your_feature.py` under `app/app/tools/`.
+2. Import it from `app/app/tools/__init__.py`:
 
 ```python
 from . import your_feature  # noqa: F401
@@ -71,8 +71,8 @@ async def get_order(
 
 Resources expose read-only data that hosts/users can attach as context.
 
-1. Add `your_domain.py` under `src/apk_mcp/resources/`.
-2. Import it from `src/apk_mcp/resources/__init__.py`.
+1. Add `your_domain.py` under `app/app/resources/`.
+2. Import it from `app/app/resources/__init__.py`.
 3. Use URI scheme `apk://<domain>/<resource>[/{param}]`:
 
 **Static resource:**
@@ -108,13 +108,13 @@ async def product_resource(
 
 Prompts are workflow templates for multi-step tasks. **Do not** create 1:1 wrappers over a single tool — they add no value over calling the tool directly.
 
-1. Add `your_domain.py` under `src/apk_mcp/prompts/`.
-2. Import it from `src/apk_mcp/prompts/__init__.py`.
+1. Add `your_domain.py` under `app/app/prompts/`.
+2. Import it from `app/app/prompts/__init__.py`.
 3. Use `@mcp.prompt(name="...", description="...")`, sync `def`, return `list[Message]`:
 
 ```python
 from fastmcp.prompts import Message
-from apk_mcp.server import mcp
+from app.server import mcp
 
 @mcp.prompt(
     name="place_order",
@@ -136,8 +136,8 @@ def place_order(items_text: str) -> list[Message]:
 
 ## Implement the service function
 
-1. Locate or create **`src/apk_mcp/services/order_bridge/<area>.py`**.
-2. Import the generated API module from `apk_mcp.generated.order_bridge_client.api.default`.
+1. Locate or create **`app/app/services/order_bridge/<area>.py`**.
+2. Import the generated API module from `app.generated.order_bridge_client.api.default`.
 3. Import the **success response model** for HTTP 200.
 4. Call **`client_helper(endpoint_module, client, success_type=..., unexpected_shape_message="...", **kwargs)`**:
    - `kwargs` must match the generated `asyncio_detailed` signature.
@@ -160,7 +160,7 @@ async with bearer_authorization(client, bearer_token):
 
 ## After adding surface
 
-- Update `instructions=` in `src/apk_mcp/server/server.py`.
+- Update `instructions=` in `app/app/server/server.py`.
 - Update `README.md` Tools / Resources / Prompts tables.
 - Regenerate the Python client when OpenAPI changes (`pnpm run gen:order-bridge-types`); new endpoints must exist under `generated/order_bridge_client` before wiring.
 
