@@ -10,6 +10,7 @@
     "test": "sh -c 'if command -v uv >/dev/null 2>&1; then exec uv run pytest \"$@\"; elif [ -x .venv/bin/python ]; then exec .venv/bin/python -m pytest \"$@\"; else exec python3 -m pytest \"$@\"; fi' sh",
     "shop-key": "sh -c 'if command -v uv >/dev/null 2>&1; then exec uv run apk-mcp-shop-key \"$@\"; elif [ -x .venv/bin/apk-mcp-shop-key ]; then exec .venv/bin/apk-mcp-shop-key \"$@\"; else exec apk-mcp-shop-key \"$@\"; fi' sh",
     "gen:order-bridge-types": "bash scripts/gen-order-bridge-api.sh",
+    "instructions:preview": "sh -c 'if command -v uv >/dev/null 2>&1; then exec uv run python scripts/preview_instructions.py; elif [ -x .venv/bin/python ]; then exec .venv/bin/python scripts/preview_instructions.py; else exec python3 scripts/preview_instructions.py; fi'",
     "inspector": "mcp-inspector",
     "dev": "concurrently -n mcp,inspector -c blue,magenta \"pnpm run mcp:server\" \"pnpm run inspector\"",
     "deploy": "serverless deploy",
