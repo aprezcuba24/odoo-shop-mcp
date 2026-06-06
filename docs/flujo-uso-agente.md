@@ -68,7 +68,7 @@ Los tools ejecutan una acción o consulta contra la API. El agente los invoca pa
 
 | Grupo | Tools | Requiere Bearer |
 |-------|-------|-----------------|
-| Catálogo | `list_products`, `get_product` | No |
+| Catálogo (lectura) | `read_catalog_products`, `read_catalog_product`, `read_catalog_categories` (o Resources `apk://catalog/...` si el cliente soporta `resources/read`) | No |
 | Dispositivo | `register_device`, `get_device_status` | No / Sí |
 | Pedidos | `list_orders`, `get_order`, `create_order`, `cancel_order` | Sí |
 | Perfil | `get_profile`, `update_profile`, `replace_profile` | Sí |
@@ -77,8 +77,8 @@ Los tools ejecutan una acción o consulta contra la API. El agente los invoca pa
 Ejemplo de llamada desde el agente (pseudocódigo):
 
 ```python
-result = await mcp.call_tool("list_products", {"search": "arroz", "limit": 10})
-# result → {"products": [...], "total": 42}
+result = await mcp.call_tool("read_catalog_products", {"search": "arroz", "limit": 10})
+# result → {"items": [...], "total": 42}
 ```
 
 Los tools públicos funcionan sin ningún setup previo. Los tools Bearer requieren que el dispositivo esté registrado y validado en Odoo (ver sección 5).
@@ -132,8 +132,8 @@ sequenceDiagram
     U->>A: "Muéstrame los productos de la categoría Lácteos"
     A->>M: read resource apk://catalog/categories
     M-->>A: [{id: 3, name: "Lácteos"}, ...]
-    A->>M: call tool list_products(search="", category_id=3, limit=20)
-    M-->>A: {products: [...], total: 15}
+    A->>M: call tool read_catalog_products(search="", category_id=3, limit=20)
+    M-->>A: {items: [...], total: 15}
     A-->>U: Lista de productos formateada
 ```
 
@@ -181,9 +181,9 @@ sequenceDiagram
     U->>A: "Quiero 2 leches y 1 queso"
     A->>M: prompt place_order(items_text="2 leches, 1 queso")
     Note over A,M: El prompt guía los pasos siguientes
-    A->>M: call tool list_products(search="leche", limit=5)
+    A->>M: call tool read_catalog_products(search="leche", limit=5)
     M-->>A: [{id: 12, name: "Leche entera 1L"}, ...]
-    A->>M: call tool list_products(search="queso", limit=5)
+    A->>M: call tool read_catalog_products(search="queso", limit=5)
     M-->>A: [{id: 7, name: "Queso gouda"}, ...]
     A->>M: call tool create_order(lines=[{product_id:12, qty:2}, {product_id:7, qty:1}])
     alt Stock suficiente

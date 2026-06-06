@@ -20,7 +20,7 @@ Servidor **MCP** (FastMCP, transporte **Streamable HTTP**) que expone *tools* al
 1. El cliente abre sesión MCP sobre HTTP (`/mcp`).
 2. El lifespan crea un [`ClientRegistry`](app/app/server/app_state.py) (pool lazy de `httpx.AsyncClient` por URL de backend decodificada del `shop-key`).
 3. Cada petición HTTP al MCP lleva (según configuración) una cabecera de tenant; [`resolve_tenant_id`](app/app/server/tenant_resolution.py) la lee vía [`get_http_request`](https://gofastmcp.com) de FastMCP.
-4. Un tool (p. ej. `list_products`) usa `app_state.api` → `GET /api/order_bridge/products` (público).
+4. Una lectura de catálogo (p. ej. Resource `apk://catalog/products` o tool `read_catalog_products`) usa `app_state.api` → `GET /api/order_bridge/products` (público).
 5. Rutas Bearer llaman a `ensure_device_token(tenant_id)` para el tenant actual y aplican `bearer_authorization` al cliente generado.
 
 ## Credenciales en memoria (multi-tenant)
@@ -32,4 +32,4 @@ Servidor **MCP** (FastMCP, transporte **Streamable HTTP**) que expone *tools* al
 
 ## Extensión
 
-Nuevos endpoints del OpenAPI: añadir modelos en `models/`, tool en `tools/` y registrarlo desde el lifespan o un módulo de registro compartido con `catalog.py`.
+Nuevos endpoints del OpenAPI: añadir modelos en `models/`, handler en `resources/` y, si hace falta compatibilidad con clientes sin `resources/read`, tool `read_*` en `tools/tool_resources/`; tools de acción en `tools/`.
