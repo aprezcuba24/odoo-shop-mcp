@@ -168,7 +168,7 @@ async with bearer_authorization(client, bearer_token):
 
 | Domain | Tool | Resource | Service |
 |--------|------|----------|---------|
-| Products | `tools/catalog.py` | `resources/catalog.py` | `services/order_bridge/products.py` |
+| Products | `tools/catalog.py` (`search`, `fetch`, `list_products`, `get_product`, `list_categories`) | `resources/catalog.py` | `services/order_bridge/products.py`, `categories.py`, `catalog_presenters.py` |
 | Orders | `tools/orders.py` | `resources/orders.py` | `services/order_bridge/orders.py` |
 | Profile | `tools/profile.py` | `resources/session.py` | `services/order_bridge/profile.py` |
 | Device | `tools/device.py` | `resources/session.py` | `services/order_bridge/device.py` |

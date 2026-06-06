@@ -77,9 +77,16 @@ También puedes ejecutar por separado `pnpm run mcp:server` y `pnpm run inspecto
 
 ## Uso con ChatGPT / Cursor
 
-1. Despliega este servidor en una URL HTTPS accesible (o túnel tipo Cloudflare Tunnel / ngrok).
+1. Despliega este servidor en una URL HTTPS accesible (o túnel tipo Cloudflare Tunnel / ngrok). Tras cambiar tools o instrucciones, **vuelve a desplegar** (`pnpm run deploy` o `pnpm run deploy:prod`) y **refresca el conector** en ChatGPT.
 2. En el cliente, añade un servidor MCP remoto con la URL `https://tu-host/mcp` y la cabecera **`shop-key`** (`Bearer` + base64 de `URL|user_token`).
 3. Genera el `shop-key` con `pnpm shop-key -- https://tu-odoo.com|<user_token>`.
+
+**ChatGPT (conector personalizado):** ChatGPT **no ejecuta** `resources/read`; solo inyecta un resumen truncado de Resources en el contexto del modelo. Para catálogo debe usar las tools **`search`**, **`fetch`**, `list_products`, `get_product` y `list_categories`. Si el chat sigue mostrando la lista antigua de tools (sin catálogo):
+
+- En **Ajustes → Conectores**, abre el conector YY-Mercado y pulsa **Actualizar / Refresh**.
+- **Inicia un chat nuevo** (los chats existentes congelan el esquema de tools al crearse).
+- Comprueba que la URL del conector apunta al despliegue actualizado (versión del servidor `2.1.0+` en `initialize`).
+- Pregunta al modelo: *«Lista las tools del conector YY-Mercado»* — deben aparecer `search`, `fetch`, `list_products`, etc.
 
 ## VS Code y GitHub Copilot (agentes / Chat)
 
@@ -118,8 +125,11 @@ Más detalle en la documentación de GitHub: [Extender Copilot Chat con servidor
 
 | Nombre | Endpoint | Auth |
 |--------|----------|------|
+| `search` | `GET /products?search=` (formato conector ChatGPT) | Público |
+| `fetch` | `GET /products/{id}` (formato conector ChatGPT) | Público |
 | `list_products` | `GET /products` | Público |
 | `get_product` | `GET /products/{id}` | Público |
+| `list_categories` | `GET /categories` | Público |
 | `register_device` | `POST /register` | Público |
 | `get_device_status` | `GET /status` | Bearer |
 | `list_orders` | `GET /orders` | Bearer |
@@ -144,12 +154,15 @@ En **desarrollo** (`CART_STORE_BACKEND=memory`) el carrito vive en el proceso MC
 | URI | Descripción | Auth |
 |-----|-------------|------|
 | `apk://catalog/categories` | Lista de categorías de producto | Público |
-| `apk://catalog/banners` | Banners publicitarios activos | Público |
+| `apk://catalog/products` | Listado completo de productos (sin filtros) | Público |
+| `apk://catalog/products{?limit,offset,category_id,search}` | Listado paginado/filtrado de productos | Público |
 | `apk://catalog/products/{product_id}` | Detalle de producto | Público |
+| `apk://catalog/banners` | Banners publicitarios activos | Público |
 | `apk://store/settings` | Configuración general de la tienda | Público |
 | `apk://locations/municipalities` | Municipios y barrios (nomencladores) | Público |
 | `apk://session/status` | Estado de validación del dispositivo | Bearer |
 | `apk://session/profile` | Perfil del contacto del dispositivo | Bearer |
+| `apk://orders` | Listado de pedidos del usuario (sin filtros) | Bearer |
 | `apk://orders{?limit,offset,state}` | Listado paginado de pedidos del usuario | Bearer |
 | `apk://orders/{order_id}` | Detalle de pedido con líneas | Bearer |
 

@@ -25,6 +25,7 @@ async def app_lifespan(server: FastMCP):
 
 mcp = FastMCP(
     name="apk-mcp",
+    version="2.1.0",
     instructions=instructions,
     lifespan=app_lifespan,
 )

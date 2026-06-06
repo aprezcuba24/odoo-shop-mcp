@@ -15,6 +15,24 @@ from app.services.order_bridge.orders import get_order_detail, list_orders_page
 
 
 @mcp.resource(
+    uri="apk://orders",
+    name="Pedidos del usuario (listado)",
+    description=(
+        "Listado de pedidos del contacto sin filtros (Bearer). "
+        "Para paginación o filtro por estado usar el template con parámetros."
+    ),
+    mime_type="application/json",
+)
+async def orders_resource(
+    auth: AuthenticatedOrderBridgeRef = Depends(get_authenticated_order_bridge),
+) -> dict[str, Any]:
+    return await list_orders_page(
+        auth.client,
+        bearer_token=auth.bearer_token,
+    )
+
+
+@mcp.resource(
     uri="apk://orders{?limit,offset,state}",
     name="Pedidos del usuario",
     description=(

@@ -24,6 +24,21 @@ async def categories_resource(
 
 
 @mcp.resource(
+    uri="apk://catalog/products",
+    name="Catálogo: productos (listado)",
+    description=(
+        "Listado completo de productos del catálogo sin filtros (público). "
+        "Para búsqueda o paginación usar el template con parámetros."
+    ),
+    mime_type="application/json",
+)
+async def products_list_resource(
+    api: OrderBridgeClientRef = Depends(get_apk_api),
+) -> dict[str, Any]:
+    return await list_products_page(api.client)
+
+
+@mcp.resource(
     uri="apk://catalog/products{?limit,offset,category_id,search}",
     name="Catálogo: productos",
     description="Lista completa de productos del catálogo (público).",
