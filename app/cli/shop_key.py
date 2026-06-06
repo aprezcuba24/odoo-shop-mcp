@@ -5,7 +5,10 @@ from __future__ import annotations
 import argparse
 import sys
 
-from app.utils.shop_key_codec import decode_shop_key, encode_shop_key_from_credentials
+from app.utils.shop_key_codec import (
+    encode_shop_key_from_credentials,
+    shop_context_from_encoded,
+)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -31,7 +34,7 @@ def main(argv: list[str] | None = None) -> int:
     print(encoded)
 
     if args.verbose:
-        ctx = decode_shop_key(encoded)
+        ctx = shop_context_from_encoded(encoded)
         print(f"base_url: {ctx.base_url}", file=sys.stderr)
         print(f"bearer_token: {ctx.bearer_token}", file=sys.stderr)
 

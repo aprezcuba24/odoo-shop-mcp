@@ -8,9 +8,10 @@ from .app_state import (
     get_apk_api,
     get_authenticated_order_bridge,
 )
-from app.utils.exceptions import InvalidShopKeyError
+from app.utils.exceptions import AmbiguousShopKeyError, InvalidShopKeyError
 from app.utils.shop_key_codec import (
     SHOP_KEY_HEADER,
+    SHOP_KEY_QUERY_PARAM,
     ShopContext,
     resolve_shop_context,
     resolve_shop_key,
@@ -22,10 +23,12 @@ import app.resources  # noqa: F401  # register resources
 import app.prompts  # noqa: F401  # register prompts
 
 __all__ = [
+    "AmbiguousShopKeyError",
     "AuthenticatedOrderBridgeRef",
     "InvalidShopKeyError",
     "OrderBridgeClientRef",
     "SHOP_KEY_HEADER",
+    "SHOP_KEY_QUERY_PARAM",
     "ShopContext",
     "get_apk_api",
     "get_authenticated_order_bridge",

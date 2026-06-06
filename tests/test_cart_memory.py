@@ -9,11 +9,11 @@ import pytest
 
 from app.services.cart.base import CartStoreKey
 from app.services.cart.memory import InMemoryCartStore
-from app.utils.shop_key_codec import decode_shop_key, encode_shop_key
+from app.utils.shop_key_codec import encode_shop_key, shop_context_from_encoded
 
 
 def _cart_key(base_url: str, token: str) -> CartStoreKey:
-    return decode_shop_key(encode_shop_key(base_url, token)).cart_store_key()
+    return shop_context_from_encoded(encode_shop_key(base_url, token)).cart_store_key()
 
 
 _KEY_A = _cart_key("https://a.example.com", "token-a")
@@ -108,7 +108,7 @@ def test_add_line_rejects_non_positive_quantity() -> None:
 def test_cart_tools_use_resolve_shop_context() -> None:
     from app.tools import cart as cart_tools
 
-    ctx = decode_shop_key(encode_shop_key("http://localhost:8069", "test-shop-key"))
+    ctx = shop_context_from_encoded(encode_shop_key("http://localhost:8069", "test-shop-key"))
 
     async def run() -> None:
         with patch(

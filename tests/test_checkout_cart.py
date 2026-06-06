@@ -7,9 +7,9 @@ from unittest.mock import AsyncMock, patch
 
 from app.services.cart.memory import InMemoryCartStore
 from app.utils.exceptions import InsufficientStockError
-from app.utils.shop_key_codec import decode_shop_key, encode_shop_key
+from app.utils.shop_key_codec import encode_shop_key, shop_context_from_encoded
 
-_CTX = decode_shop_key(encode_shop_key("http://localhost:8069", "test-key"))
+_CTX = shop_context_from_encoded(encode_shop_key("http://localhost:8069", "test-key"))
 _CART_KEY = _CTX.cart_store_key()
 
 

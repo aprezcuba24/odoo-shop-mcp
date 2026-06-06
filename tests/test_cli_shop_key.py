@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from app.cli.shop_key import main
-from app.utils.shop_key_codec import SHOP_KEY_BEARER_PREFIX, decode_shop_key
+from app.utils.shop_key_codec import SHOP_KEY_BEARER_PREFIX, shop_context_from_encoded
 
 
 def test_cli_prints_bearer_encoded_shop_key(capsys) -> None:
@@ -14,7 +14,7 @@ def test_cli_prints_bearer_encoded_shop_key(capsys) -> None:
     encoded = captured.out.strip()
     assert encoded.startswith(SHOP_KEY_BEARER_PREFIX)
 
-    ctx = decode_shop_key(encoded)
+    ctx = shop_context_from_encoded(encoded)
     assert ctx.base_url == "http://localhost:8069"
     assert ctx.bearer_token == "Bearer test-token"
 

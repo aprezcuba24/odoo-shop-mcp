@@ -7,6 +7,7 @@ from fastmcp.server.lifespan import lifespan
 
 from app.config import get_settings
 from .app_state import ClientRegistry, app_state
+from .middleware import MCP_HTTP_MIDDLEWARE
 
 
 @lifespan
@@ -64,4 +65,5 @@ def run() -> None:
         host=settings.mcp_host,
         port=settings.mcp_port,
         path=settings.mcp_path,
+        middleware=MCP_HTTP_MIDDLEWARE,
     )
