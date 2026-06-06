@@ -18,36 +18,9 @@ from app.services.order_bridge.orders import (
     cancel_order,
     create_order,
     get_last_order,
-    get_order_detail,
-    list_orders_page,
 )
 from app.services.order_bridge.order_presenters import present_insufficient_stock
 from app.utils.exceptions import InsufficientStockError
-
-
-@mcp.tool(
-    name="list_orders",
-    description=(
-        "Lista pedidos de venta del contacto de este dispositivo (GET /api/order_bridge/orders, Bearer). "
-        "Admite paginación (limit, offset) y filtro opcional por estado Odoo interno "
-        "(p. ej. 'draft', 'sale', 'cancel'). "
-        "Cada ítem expone order_number, status (español) e importes; referencias internas en _agent "
-        "(order_id, store_state) — no mostrar _agent al usuario final."
-    ),
-)
-async def list_orders(
-    auth: AuthenticatedOrderBridgeRef = Depends(get_authenticated_order_bridge),
-    limit: int | None = None,
-    offset: int | None = None,
-    state: str | None = None,
-) -> dict[str, Any]:
-    return await list_orders_page(
-        auth.client,
-        bearer_token=auth.bearer_token,
-        limit=limit,
-        offset=offset,
-        state=state,
-    )
 
 
 @mcp.tool(
@@ -65,25 +38,6 @@ async def get_last_order_tool(
     return await get_last_order(
         auth.client,
         bearer_token=auth.bearer_token,
-    )
-
-
-@mcp.tool(
-    name="get_order",
-    description=(
-        "Obtiene el detalle completo de un pedido de venta (líneas, importes, dirección) "
-        "vía GET /api/order_bridge/orders/{order_id} (Bearer). "
-        "Respuesta con order_number, status (español) y _agent (order_id, product_id) — no mostrar _agent al usuario."
-    ),
-)
-async def get_order(
-    order_id: int,
-    auth: AuthenticatedOrderBridgeRef = Depends(get_authenticated_order_bridge),
-) -> dict[str, Any]:
-    return await get_order_detail(
-        auth.client,
-        bearer_token=auth.bearer_token,
-        order_id=order_id,
     )
 
 

@@ -19,7 +19,7 @@ from app.services.order_bridge.profile import update_profile
     description=(
         "Actualiza parcialmente el perfil del contacto (PATCH /api/order_bridge/profile, Bearer). "
         "Puedes cambiar name y/o campos de address (street, state, municipality_id, neighborhood_id). "
-        "Para resolver municipality_id y neighborhood_id, lee antes apk://locations/municipalities. "
+        "Para resolver municipality_id y neighborhood_id, llama antes a read_locations_municipalities. "
         "El teléfono no se modifica con esta tool. Devuelve el perfil actualizado."
     ),
 )

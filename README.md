@@ -81,12 +81,12 @@ También puedes ejecutar por separado `pnpm run mcp:server` y `pnpm run inspecto
 2. En el cliente, añade un servidor MCP remoto con la URL `https://tu-host/mcp` y la cabecera **`shop-key`** (`Bearer` + base64 de `URL|user_token`).
 3. Genera el `shop-key` con `pnpm shop-key -- https://tu-odoo.com|<user_token>`.
 
-**ChatGPT (conector personalizado):** ChatGPT **no ejecuta** `resources/read`; solo inyecta un resumen truncado de Resources en el contexto del modelo. Para catálogo debe usar las tools **`search`**, **`fetch`**, `list_products`, `get_product` y `list_categories`. Si el chat sigue mostrando la lista antigua de tools (sin catálogo):
+**ChatGPT (conector personalizado):** ChatGPT **no ejecuta** `resources/read`; solo inyecta un resumen truncado de Resources en el contexto del modelo. Para lecturas debe usar las tools **`read_*`** en `app/tools/tool_resources/` (equivalente a cada Resource `apk://`). Si el chat sigue mostrando la lista antigua de tools:
 
 - En **Ajustes → Conectores**, abre el conector YY-Mercado y pulsa **Actualizar / Refresh**.
 - **Inicia un chat nuevo** (los chats existentes congelan el esquema de tools al crearse).
 - Comprueba que la URL del conector apunta al despliegue actualizado (versión del servidor `2.1.0+` en `initialize`).
-- Pregunta al modelo: *«Lista las tools del conector YY-Mercado»* — deben aparecer `search`, `fetch`, `list_products`, etc.
+- Pregunta al modelo: *«Lista las tools del conector YY-Mercado»* — deben aparecer `read_catalog_products`, `read_catalog_product`, etc.
 
 ## VS Code y GitHub Copilot (agentes / Chat)
 
@@ -123,22 +123,28 @@ Más detalle en la documentación de GitHub: [Extender Copilot Chat con servidor
 
 ### Tools
 
+#### Lecturas (`tool_resources` — equivalente a Resources para ChatGPT)
+
+| Nombre | Resource equivalente | Endpoint | Auth |
+|--------|-------------------|----------|------|
+| `read_catalog_categories` | `apk://catalog/categories` | `GET /categories` | Público |
+| `read_catalog_products` | `apk://catalog/products` | `GET /products` | Público |
+| `read_catalog_product` | `apk://catalog/products/{id}` | `GET /products/{id}` | Público |
+| `read_session_profile` | `apk://session/profile` | `GET /profile` | Bearer |
+| `read_orders` | `apk://orders` | `GET /orders` | Bearer |
+| `read_order` | `apk://orders/{id}` | `GET /orders/{id}` | Bearer |
+| `read_locations_municipalities` | `apk://locations/municipalities` | `GET /municipalities` | Público |
+
+#### Acciones
+
 | Nombre | Endpoint | Auth |
 |--------|----------|------|
-| `search` | `GET /products?search=` (formato conector ChatGPT) | Público |
-| `fetch` | `GET /products/{id}` (formato conector ChatGPT) | Público |
-| `list_products` | `GET /products` | Público |
-| `get_product` | `GET /products/{id}` | Público |
-| `list_categories` | `GET /categories` | Público |
 | `register_device` | `POST /register` | Público |
 | `get_device_status` | `GET /status` | Bearer |
-| `list_orders` | `GET /orders` | Bearer |
 | `get_last_order` | `GET /orders?limit=1` + `GET /orders/{id}` | Bearer |
-| `get_order` | `GET /orders/{id}` | Bearer |
 | `create_order` | `POST /orders` | Bearer |
 | `checkout_cart` | `POST /orders` (líneas del carrito del servidor) | Bearer |
 | `cancel_order` | `POST /orders/{id}/cancel` | Bearer |
-| `get_profile` | `GET /profile` | Bearer |
 | `update_profile` | `PATCH /profile` | Bearer |
 | `replace_profile` | `PUT /profile` | Bearer |
 | `register_push_token` | `POST /push/token` | Bearer |

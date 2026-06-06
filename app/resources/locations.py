@@ -10,6 +10,10 @@ from app.server import OrderBridgeClientRef, get_apk_api, mcp
 from app.services.order_bridge.locations import list_municipalities
 
 
+async def read_locations_municipalities(api: OrderBridgeClientRef) -> dict[str, Any]:
+    return await list_municipalities(api.client)
+
+
 @mcp.resource(
     uri="apk://locations/municipalities",
     name="Ubicaciones: municipios y barrios",
@@ -24,4 +28,4 @@ from app.services.order_bridge.locations import list_municipalities
 async def municipalities_resource(
     api: OrderBridgeClientRef = Depends(get_apk_api),
 ) -> dict[str, Any]:
-    return await list_municipalities(api.client)
+    return await read_locations_municipalities(api)

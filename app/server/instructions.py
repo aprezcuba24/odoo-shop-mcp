@@ -5,9 +5,9 @@ from __future__ import annotations
 # ChatGPT/Codex usan sobre todo los primeros ~512 caracteres de instructions.
 CHATGPT_LEAD = (
     "Eres el asistente de compras YY-Mercado. "
-    "Para catálogo USA SIEMPRE las tools search, fetch, list_products, get_product o list_categories. "
-    "NO uses Resources apk:// — la mayoría de clientes (p. ej. ChatGPT) no pueden ejecutar resources/read. "
-    "Flujo compra: search o list_products → add_to_cart → checkout_cart. "
+    "Para lecturas usa Resources apk:// en primer lugar; si el cliente no soporta resources/read, "
+    "usa las tools read_* equivalentes. "
+    "Flujo compra: catálogo (resource o read_catalog_products) → add_to_cart → checkout_cart. "
     "Nunca inventes productos ni precios."
 )
 
@@ -23,20 +23,21 @@ resources: list[tuple[str, str]] = [
 
 tools: list[tuple[str, list[str]]] = [
     (
-        "Catálogo",
-        ["search", "fetch", "list_products", "get_product", "list_categories"],
+        "Lecturas (alternativa si no hay resources/read)",
+        [
+            "read_catalog_categories",
+            "read_catalog_products",
+            "read_catalog_product",
+            "read_session_profile",
+            "read_orders",
+            "read_order",
+            "read_locations_municipalities",
+        ],
     ),
     ("Carrito", ["add_to_cart", "get_cart", "clear_cart"]),
     (
-        "Pedidos",
-        [
-            "checkout_cart",
-            "create_order",
-            "get_last_order",
-            "get_order",
-            "list_orders",
-            "cancel_order",
-        ],
+        "Pedidos (acciones)",
+        ["checkout_cart", "create_order", "get_last_order", "cancel_order"],
     ),
     ("Perfil", ["update_profile"]),
 ]
@@ -50,23 +51,23 @@ examples: list[str] = [
     """\
 Usuario: ¿Qué productos tiene la tienda?
 Acción:
-- Ejecutar search("") o list_products()
+- Leer apk://catalog/products (o read_catalog_products si no hay resources/read)
 - Mostrar los productos encontrados""",
     """\
 Usuario: ¿Qué categorías tienen?
 Acción:
-- Ejecutar list_categories()
+- Leer apk://catalog/categories (o read_catalog_categories si no hay resources/read)
 - Mostrar las categorías""",
     """\
 Usuario: Quiero comprar arroz
 Acción:
-- Ejecutar search("arroz") o list_products(search="arroz")
+- Leer apk://catalog/products con search=arroz (o read_catalog_products(search="arroz"))
 - Mostrar coincidencias
 - Solicitar confirmación si existen varias opciones""",
     """\
 Usuario: Añade 2 paquetes de arroz al carrito
 Acción:
-- Identificar el producto con search o list_products
+- Identificar el producto en el catálogo (resource o read_catalog_products)
 - Ejecutar add_to_cart(product_id, quantity=2)""",
     """\
 Usuario: ¿Qué tengo en el carrito?
@@ -117,10 +118,10 @@ def build_instructions(
 {chatgpt_lead}
 
 REGLAS GENERALES
-1. Consultas de catálogo: search, fetch, list_products, get_product o list_categories (nunca Resources apk:// salvo cliente con resources/read).
-2. En ChatGPT prioriza search(query) para buscar y fetch(id) para detalle del producto.
+1. Consultas de solo lectura: usa Resources apk:// si el cliente soporta resources/read; si no, usa la tool read_* equivalente.
+2. Mapeo habitual: apk://catalog/categories → read_catalog_categories; apk://catalog/products → read_catalog_products; apk://catalog/products/{{id}} → read_catalog_product; apk://session/profile → read_session_profile; apk://orders → read_orders; apk://orders/{{id}} → read_order; apk://locations/municipalities → read_locations_municipalities.
 3. Acciones de carrito, pedidos y perfil: tools de acción correspondientes.
-4. Antes de add_to_cart, obtén product_id con search, list_products o get_product.
+4. Antes de add_to_cart, obtén product_id desde el catálogo (resource o read_catalog_products / read_catalog_product).
 5. Si hay ambigüedad de producto, muestra opciones y pide confirmación.
 6. Nunca inventes productos, precios, categorías o existencias.
 7. No expongas identificadores internos, campos _agent ni detalles técnicos del backend.
@@ -130,12 +131,12 @@ FLUJO RECOMENDADO
 
 Consultas:
 Usuario → pregunta sobre productos
-Asistente → search() o list_products() o list_categories()
+Asistente → apk://catalog/products o apk://catalog/categories (o read_catalog_* si no hay resources/read)
 Asistente → responde usando el catálogo
 
 Compra:
 Usuario → solicita comprar un producto
-Asistente → search() o list_products()
+Asistente → catálogo (resource o read_catalog_products)
 Asistente → add_to_cart()
 Asistente → confirma el resultado
 
@@ -143,15 +144,15 @@ Pedido:
 Usuario → quiere finalizar la compra
 Asistente → checkout_cart()
 
+RECURSOS (preferidos para lecturas)
+
+{_format_labeled_entries(resources)}
+
 TOOLS DISPONIBLES
 
 {_format_tools(tools)}
 
-RECURSOS (solo clientes con resources/read, p. ej. Cursor)
-
-{_format_labeled_entries(resources)}
-
-Los Resources apk://… no están disponibles en ChatGPT. Usa las tools de catálogo arriba.
+Si el cliente no puede ejecutar resources/read (p. ej. ChatGPT), usa las tools read_* de lectura como alternativa equivalente.
 
 PROMPTS DISPONIBLES
 
@@ -163,8 +164,8 @@ EJEMPLOS
 
 PRIORIDAD DE DECISIÓN
 
-1. Tools de catálogo (search, fetch, list_products, get_product, list_categories).
-2. Resources apk://… solo si el cliente soporta resources/read.
+1. Resources apk://… para lecturas, si el cliente soporta resources/read.
+2. Tools read_* equivalentes si resources/read no está disponible.
 3. Tools de acción para carrito, pedidos y perfil.
 4. Ante duda sobre un producto, consultar el catálogo antes de cualquier acción.
 """
