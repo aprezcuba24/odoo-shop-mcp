@@ -35,7 +35,8 @@ def _intent_summary(
     name="update_my_address",
     description=(
         "Guía para ver o actualizar nombre y dirección de entrega del perfil "
-        "(resources apk://session/profile y apk://locations/municipalities, tool update_profile)."
+        "(resources apk://session/profile y apk://locations/municipalities en primer lugar; "
+        "si no hay resources/read, read_session_profile y read_locations_municipalities; tool update_profile)."
     ),
 )
 def update_my_address(
@@ -60,13 +61,14 @@ def update_my_address(
             "La dirección guardada en el perfil es la que usa la tienda al crear "
             "pedidos de entrega (checkout_cart y create_order); conviene tenerla correcta "
             "antes de confirmar una compra.",
-            "Lee el resource apk://session/profile y muestra al usuario su nombre, "
-            "teléfono y dirección actual (solo campos legibles; no muestres el bloque _agent).",
+            "Lee primero el resource apk://session/profile y muestra al usuario su nombre, "
+            "teléfono y dirección actual (solo campos legibles; no muestres el bloque _agent). "
+            "Si el cliente no soporta resources/read, usa read_session_profile.",
             "El teléfono del perfil no se puede cambiar con update_profile; si el usuario "
             "pide modificarlo, explícale que no está disponible en esta tienda.",
             "Para cambiar el nombre, llama update_profile con el parámetro name.",
             "Para cambiar la dirección (calle, provincia, municipio, barrio):",
-            "  1. Lee apk://locations/municipalities.",
+            "  1. Lee apk://locations/municipalities (o read_locations_municipalities si no hay resources/read).",
             "  2. Resuelve los nombres de municipio y barrio a municipality_id y "
             "neighborhood_id usando el bloque _agent de cada ítem (no muestres esos IDs al usuario).",
             "  3. Llama update_profile con street, state, municipality_id y neighborhood_id "
@@ -74,7 +76,7 @@ def update_my_address(
             "La respuesta de update_profile ya incluye el perfil actualizado; confirma el "
             "cambio al usuario en lenguaje natural.",
             "Si el municipio o barrio indicado no aparece en el nomenclador, pide al usuario "
-            "que aclare o elija de la lista que devuelve el resource de ubicaciones.",
+            "que aclare o elija de la lista que devuelve el resource o la tool de ubicaciones.",
         ]
     )
     return [Message("\n".join(lines))]

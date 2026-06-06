@@ -14,11 +14,12 @@ description: >-
 
 ## Architecture (keep this separation)
 
-1. **`app/app/tools/`** — MCP tools: `@mcp.tool`, descriptions shown to the model, typed parameters. No raw HTTP.
-2. **`app/app/resources/`** — MCP resources: `@mcp.resource`, static or templated URIs. Read-only, browseable by hosts/users.
-3. **`app/app/prompts/`** — MCP prompts: `@mcp.prompt`, multi-step workflow templates that return `list[Message]`.
-4. **`app/app/services/order_bridge/`** — One module per domain; calls the **generated** `openapi-python-client` and uses **`client_helper`** / **`bearer_authorization`** from `app.utils.openapi_detailed`.
-5. **`app/app/server/app_state.py`** — Lifespan singleton: generated `Client`. Exposes **`get_apk_api`** (public), **`get_authenticated_order_bridge`** (Bearer from request), and **`resolve_shop_key()`** when a public tool needs the same token as `POST /register` (`register_device`).
+1. **`app/app/tools/`** — MCP tools de acción: `@mcp.tool`, descriptions shown to the model, typed parameters. No raw HTTP.
+2. **`app/app/tools/tool_resources/`** — MCP tools de solo lectura que espejan Resources (`read_*`) para clientes sin `resources/read` (p. ej. ChatGPT). Importan handlers de `app/app/resources/`.
+3. **`app/app/resources/`** — MCP resources: `@mcp.resource`, static or templated URIs. **Fuente de verdad** para lecturas: define handlers `read_*` y el `@mcp.resource` delega en ellos.
+4. **`app/app/prompts/`** — MCP prompts: `@mcp.prompt`, multi-step workflow templates that return `list[Message]`.
+5. **`app/app/services/order_bridge/`** — One module per domain; calls the **generated** `openapi-python-client` and uses **`client_helper`** / **`bearer_authorization`** from `app.utils.openapi_detailed`.
+6. **`app/app/server/app_state.py`** — Lifespan singleton: generated `Client`. Exposes **`get_apk_api`** (public), **`get_authenticated_order_bridge`** (Bearer from request), and **`resolve_shop_key()`** when a public tool needs the same token as `POST /register` (`register_device`).
 
 ## Autenticación (`shop-key`, Streamable HTTP)
 
@@ -83,10 +84,14 @@ Resources expose read-only data that hosts/users can attach as context.
     description="Lista completa de categorías (pública).",
     mime_type="application/json",
 )
+async def read_catalog_categories(api: OrderBridgeClientRef) -> dict[str, Any]:
+    return await list_categories(api.client)
+
+@mcp.resource(...)
 async def categories_resource(
     api: OrderBridgeClientRef = Depends(get_apk_api),
 ) -> dict[str, Any]:
-    return await list_categories(api.client)
+    return await read_catalog_categories(api)
 ```
 
 **Templated resource** (URI parameters become function args):
@@ -97,11 +102,41 @@ async def categories_resource(
     description="Detalle de producto por ID (público).",
     mime_type="application/json",
 )
+async def read_catalog_product(
+    api: OrderBridgeClientRef, *, product_id: int,
+) -> dict[str, Any]:
+    return await get_product_detail(api.client, product_id=product_id)
+
+@mcp.resource(...)
 async def product_resource(
     product_id: int,
     api: OrderBridgeClientRef = Depends(get_apk_api),
 ) -> dict[str, Any]:
-    return await get_product_detail(api.client, product_id=product_id)
+    return await read_catalog_product(api, product_id=product_id)
+```
+
+## Adding a tool_resource (ChatGPT-compatible read)
+
+When a resource already exists, **do not duplicate service calls**. Add a thin `@mcp.tool` in `app/app/tools/tool_resources/` that imports the `read_*` handler from the resource module.
+
+1. Ensure the handler exists in `app/app/resources/<domain>.py`.
+2. Add `your_domain.py` under `app/app/tools/tool_resources/`.
+3. Import it from `app/app/tools/tool_resources/__init__.py`.
+4. Use `READ_ONLY` from `tool_resources/_common.py` and name tools `read_<domain>_<resource>`.
+
+```python
+from app.resources.catalog import read_catalog_categories
+from app.tools.tool_resources._common import READ_ONLY
+
+@mcp.tool(
+    name="read_catalog_categories",
+    description="... Equivalente al Resource apk://catalog/categories.",
+    annotations=READ_ONLY,
+)
+async def read_catalog_categories_tool(
+    api: OrderBridgeClientRef = Depends(get_apk_api),
+) -> dict[str, Any]:
+    return await read_catalog_categories(api)
 ```
 
 ## Adding a prompt
@@ -124,7 +159,7 @@ def place_order(items_text: str) -> list[Message]:
     return [
         Message(
             f"The user wants to order: {items_text}\n\n"
-            "1. Call list_products to resolve product IDs.\n"
+            "1. Call read_catalog_products to resolve product IDs.\n"
             "2. Build lines JSON and call create_order.\n"
             "3. Handle InsufficientStockError: show available qty, ask user to adjust.\n"
             "4. Present the created order summary."
@@ -166,13 +201,13 @@ async with bearer_authorization(client, bearer_token):
 
 ## Reference implementations
 
-| Domain | Tool | Resource | Service |
-|--------|------|----------|---------|
-| Products | `tools/catalog.py` | `resources/catalog.py` | `services/order_bridge/products.py` |
-| Orders | `tools/orders.py` | `resources/orders.py` | `services/order_bridge/orders.py` |
-| Profile | `tools/profile.py` | `resources/session.py` | `services/order_bridge/profile.py` |
-| Device | `tools/device.py` | `resources/session.py` | `services/order_bridge/device.py` |
-| Locations | — | `resources/locations.py` | `services/order_bridge/locations.py` |
+| Domain | Tool (acción) | Tool (lectura) | Resource | Service |
+|--------|---------------|----------------|----------|---------|
+| Products | — | `tool_resources/catalog.py` (`read_catalog_*`) | `resources/catalog.py` | `services/order_bridge/products.py`, `categories.py` |
+| Orders | `tools/orders.py` (checkout, create, cancel, get_last_order) | `tool_resources/orders.py` (`read_orders`, `read_order`) | `resources/orders.py` | `services/order_bridge/orders.py` |
+| Profile | `tools/profile.py` (`update_profile`) | `tool_resources/profile.py` (`read_session_profile`) | `resources/profile.py` | `services/order_bridge/profile.py` |
+| Device | `tools/device.py` | — | `resources/session.py` | `services/order_bridge/device.py` |
+| Locations | — | `tool_resources/locations.py` (`read_locations_municipalities`) | `resources/locations.py` | `services/order_bridge/locations.py` |
 | Store | — | `resources/store.py` | `services/order_bridge/store.py` |
 | Banners | — | `resources/catalog.py` | `services/order_bridge/banners.py` |
 | Push | `tools/push.py` | — | `services/order_bridge/push.py` |

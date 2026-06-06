@@ -11,6 +11,35 @@ from app.services.order_bridge.categories import list_categories
 from app.services.order_bridge.products import get_product_detail, list_products_page
 
 
+async def read_catalog_categories(api: OrderBridgeClientRef) -> dict[str, Any]:
+    return await list_categories(api.client)
+
+
+async def read_catalog_products(
+    api: OrderBridgeClientRef,
+    *,
+    limit: int | None = None,
+    offset: int | None = None,
+    category_id: int | None = None,
+    search: str | None = None,
+) -> dict[str, Any]:
+    return await list_products_page(
+        api.client,
+        limit=limit,
+        offset=offset,
+        category_id=category_id,
+        search=search,
+    )
+
+
+async def read_catalog_product(
+    api: OrderBridgeClientRef,
+    *,
+    product_id: int,
+) -> dict[str, Any]:
+    return await get_product_detail(api.client, product_id=product_id)
+
+
 @mcp.resource(
     uri="apk://catalog/categories",
     name="Catálogo: categorías",
@@ -20,7 +49,7 @@ from app.services.order_bridge.products import get_product_detail, list_products
 async def categories_resource(
     api: OrderBridgeClientRef = Depends(get_apk_api),
 ) -> dict[str, Any]:
-    return await list_categories(api.client)
+    return await read_catalog_categories(api)
 
 
 @mcp.resource(
@@ -36,8 +65,8 @@ async def products_resource(
     search: str | None = None,
     api: OrderBridgeClientRef = Depends(get_apk_api),
 ) -> dict[str, Any]:
-    return await list_products_page(
-        api.client,
+    return await read_catalog_products(
+        api,
         limit=limit,
         offset=offset,
         category_id=category_id,
@@ -55,4 +84,4 @@ async def product_resource(
     product_id: int,
     api: OrderBridgeClientRef = Depends(get_apk_api),
 ) -> dict[str, Any]:
-    return await get_product_detail(api.client, product_id=product_id)
+    return await read_catalog_product(api, product_id=product_id)

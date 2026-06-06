@@ -14,6 +14,34 @@ from app.server import (
 from app.services.order_bridge.orders import get_order_detail, list_orders_page
 
 
+async def read_orders(
+    auth: AuthenticatedOrderBridgeRef,
+    *,
+    limit: int | None = None,
+    offset: int | None = None,
+    state: str | None = None,
+) -> dict[str, Any]:
+    return await list_orders_page(
+        auth.client,
+        bearer_token=auth.bearer_token,
+        limit=limit,
+        offset=offset,
+        state=state,
+    )
+
+
+async def read_order(
+    auth: AuthenticatedOrderBridgeRef,
+    *,
+    order_id: int,
+) -> dict[str, Any]:
+    return await get_order_detail(
+        auth.client,
+        bearer_token=auth.bearer_token,
+        order_id=order_id,
+    )
+
+
 @mcp.resource(
     uri="apk://orders{?limit,offset,state}",
     name="Pedidos del usuario",
@@ -29,9 +57,8 @@ async def orders_list_resource(
     state: str | None = None,
     auth: AuthenticatedOrderBridgeRef = Depends(get_authenticated_order_bridge),
 ) -> dict[str, Any]:
-    return await list_orders_page(
-        auth.client,
-        bearer_token=auth.bearer_token,
+    return await read_orders(
+        auth,
         limit=limit,
         offset=offset,
         state=state,
@@ -51,8 +78,4 @@ async def order_resource(
     order_id: int,
     auth: AuthenticatedOrderBridgeRef = Depends(get_authenticated_order_bridge),
 ) -> dict[str, Any]:
-    return await get_order_detail(
-        auth.client,
-        bearer_token=auth.bearer_token,
-        order_id=order_id,
-    )
+    return await read_order(auth, order_id=order_id)
