@@ -107,8 +107,7 @@ def test_checkout_cart_insufficient_stock_keeps_cart() -> None:
 
         assert result["ok"] is False
         assert result["error"] == "insufficient_stock"
-        assert result["products"] == [{"available_qty": 1.0}]
-        assert result["_agent"]["products"] == [{"product_id": 5, "available_qty": 1.0}]
+        assert result["products"] == [{"product_id": 5, "available_qty": 1.0}]
         assert result["_agent"]["lines_submitted"] == [{"product_id": 5, "qty": 2.0}]
         lines = await store.get_lines(_CART_KEY)
         assert len(lines) == 1
