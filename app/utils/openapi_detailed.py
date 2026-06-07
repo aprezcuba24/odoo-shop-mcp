@@ -19,6 +19,7 @@ from app.generated.order_bridge_client.types import UNSET, Response, Unset
 
 from app.utils.exceptions import (
     ApkApiError,
+    InsufficientStockError,
     MessageApiError,
     NotFoundError,
     UnauthorizedError,
@@ -73,6 +74,20 @@ def body_from_content(content: bytes) -> dict[str, Any] | None:
         return None
 
 
+def raise_insufficient_stock_if_body(
+    body: dict[str, Any] | None,
+    *,
+    status_code: int,
+) -> None:
+    """Raise when the backend returns error=insufficient_stock (may be misparsed as SimpleErrorResponse)."""
+    if body and body.get("error") == "insufficient_stock":
+        raise InsufficientStockError(
+            message_from_error_body(body, ""),
+            status_code=status_code,
+            body=body,
+        )
+
+
 def raise_apk_http(*, status_code: int, content: bytes, fallback_text: str) -> None:
     body = body_from_content(content)
     msg = message_from_error_body(body, fallback_text)
@@ -81,6 +96,7 @@ def raise_apk_http(*, status_code: int, content: bytes, fallback_text: str) -> N
     if status_code == 404:
         raise NotFoundError(msg or "Not found", status_code=status_code, body=body)
     if status_code == 400:
+        raise_insufficient_stock_if_body(body, status_code=status_code)
         err = (body or {}).get("error") if body else None
         if err == "validation" or (body and "details" in body):
             raise ValidationApiError(msg or "Validation error", status_code=status_code, body=body)
@@ -121,6 +137,8 @@ async def client_helper(
         return parsed.to_dict()
 
     if resp.status_code == HTTPStatus.BAD_REQUEST:
+        body = body_from_content(resp.content)
+        raise_insufficient_stock_if_body(body, status_code=code)
         for model_type, exc_type in bad_request_spec:
             if isinstance(parsed, model_type):
                 d = parsed.to_dict()

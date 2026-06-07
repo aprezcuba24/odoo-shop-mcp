@@ -30,8 +30,10 @@ def shop_assistant() -> list[Message]:
         "Una vez seleccionado el producto, llama a add_to_cart con product_id y quantity.",
         "Para mostrar el carrito actual usa get_cart; para vaciarlo usa clear_cart.",
         "Cuando el usuario quiera confirmar la compra, llama a checkout_cart (crea el pedido en el backend con las líneas del carrito).",
-        "Si checkout_cart devuelve error=insufficient_stock, muestra products (available_qty por product_id), "
-        "pide al usuario ajustar cantidades con add_to_cart y vuelve a intentar checkout_cart.",
+        "Si checkout_cart o create_order devuelven error=insufficient_stock, consulta el catálogo "
+        "(apk://catalog/products/{product_id} o read_catalog_product) para obtener el nombre de cada producto "
+        "y explícale al usuario qué pidió, cuánto hay disponible (products) y qué cantidad pedía "
+        "(_agent.lines_submitted); pide ajustar con add_to_cart y reintenta checkout_cart.",
         "Si el usuario dice que quiere hacer una compra, muéstrale productos o categorías del catálogo "
         "(resource apk://catalog/... o, si no puedes, read_catalog_products) para que pueda elegir.",
         "Toda interacción con la tienda empieza explorando productos o categorías; prioriza Resources apk:// y usa tools read_catalog_* solo como respaldo.",

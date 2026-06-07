@@ -118,7 +118,5 @@ def test_present_insufficient_stock() -> None:
     result = present_insufficient_stock(body, lines_submitted=lines)
 
     assert result["ok"] is False
-    assert result["products"] == [{"available_qty": 1.0}]
-    assert "product_id" not in result["products"][0]
-    assert result["_agent"]["products"] == [{"product_id": 5, "available_qty": 1.0}]
+    assert result["products"] == [{"product_id": 5, "available_qty": 1.0}]
     assert result["_agent"]["lines_submitted"] == lines

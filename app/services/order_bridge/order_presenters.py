@@ -132,12 +132,15 @@ def present_insufficient_stock(
     return {
         "ok": False,
         "error": "insufficient_stock",
-        "message": body.get("message") or "Stock insuficiente.",
+        "message": body.get("message") or "Stock insuficiente para uno o más productos.",
         "products": [
-            {"available_qty": p.get("available_qty")} for p in raw_products
+            {
+                "product_id": p.get("product_id"),
+                "available_qty": p.get("available_qty"),
+            }
+            for p in raw_products
         ],
         "_agent": {
-            "products": raw_products,
             "lines_submitted": lines_submitted,
         },
     }

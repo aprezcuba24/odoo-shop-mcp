@@ -47,7 +47,8 @@ async def get_last_order_tool(
         "Crea un pedido de venta nuevo (POST /api/order_bridge/orders, Bearer). "
         "Pasa las líneas como cadena JSON: '[{\"product_id\": 1, \"qty\": 2.0}, ...]'. "
         "Devuelve order_number, status (español) y _agent.order_id. "
-        "Si alguna línea supera el stock disponible, devuelve InsufficientStockError con productos en el body."
+        "Si falta stock, ok=false, error=insufficient_stock, products (product_id, available_qty) "
+        "y _agent.lines_submitted; no lanza excepción."
     ),
 )
 async def tool_create_order(
@@ -55,11 +56,14 @@ async def tool_create_order(
     auth: AuthenticatedOrderBridgeRef = Depends(get_authenticated_order_bridge),
 ) -> dict[str, Any]:
     lines = json.loads(lines_json)
-    return await create_order(
-        auth.client,
-        bearer_token=auth.bearer_token,
-        lines=lines,
-    )
+    try:
+        return await create_order(
+            auth.client,
+            bearer_token=auth.bearer_token,
+            lines=lines,
+        )
+    except InsufficientStockError as exc:
+        return present_insufficient_stock(exc.body or {}, lines_submitted=lines)
 
 
 @mcp.tool(
@@ -70,8 +74,8 @@ async def tool_create_order(
         "a la cabecera HTTP shop-key (add_to_cart / get_cart). Si el pedido se crea "
         "correctamente, vacía el carrito. Devuelve ok=true con order (order_number, status). "
         "Si el carrito está vacío, ok=false y error=empty_cart. "
-        "Si falta stock, ok=false, error=insufficient_stock; available_qty visible y product_id en _agent "
-        "para ajustar cantidades con add_to_cart y reintentar."
+        "Si falta stock, ok=false, error=insufficient_stock; products con product_id y available_qty; "
+        "cantidad pedida en _agent.lines_submitted. Ajustar con add_to_cart y reintentar."
     ),
 )
 async def checkout_cart(

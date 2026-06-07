@@ -143,6 +143,8 @@ Asistente → confirma el resultado
 Pedido:
 Usuario → quiere finalizar la compra
 Asistente → checkout_cart()
+Si checkout_cart o create_order devuelven error=insufficient_stock: consulta el catálogo por product_id, \
+resume al usuario qué productos faltan stock (nombre, pedido vs disponible) y pide ajustar cantidades.
 
 RECURSOS (preferidos para lecturas)
 
